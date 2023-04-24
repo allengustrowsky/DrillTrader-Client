@@ -6,4 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'http' " />
+
+  <ItemGroup>
+    <PackageReference Include="MudBlazor" Version="6.2.2" />
+  </ItemGroup>
 </Project>

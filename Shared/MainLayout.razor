@@ -1,19 +1,55 @@
 ﻿@inherits LayoutComponentBase
+@*<PageTitle>client</PageTitle>
 
-<PageTitle>client</PageTitle>
-
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+    <div class="page">
+        <div class="sidebar">
+            <NavMenu />
         </div>
 
-        <article class="content px-4">
+        <main>
+            <div class="top-row px-4">
+                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            </div>
+
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    </div>*@
+
+
+@*From mudblazor docs: https://mudblazor.com/getting-started/layouts#basic-layout*@
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar>
+        <MudIconButton Href="/" Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Inherit" Edge="Edge.Start" />
+        Drill Trader
+
+        <MudSpacer />
+        <MudLink Class="mud-theme-primary" Href="/dashboard">Dashboard</MudLink>
+        <span style="display: inline-block; width: 2rem;"></span>
+        <MudLink Class="mud-theme-primary" Href="/stocks">Stocks</MudLink>
+        <span style="display: inline-block; width: 2rem;"></span>
+        <MudLink Class="mud-theme-primary" Href="/">Home / Logout</MudLink>
+
+
+    </MudAppBar>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Medium">
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    bool _drawerOpen = true;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}
