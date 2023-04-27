@@ -1,5 +1,7 @@
 ﻿@page "/stocks"
 @*@layout PrimaryLayout*@
+@inject IDialogService DialogService
+
 
 <MudText Typo="Typo.h2" Align="Align.Center">Assets</MudText>
 
@@ -23,9 +25,9 @@
                     <MudText Typo="Typo.body2">JPMorgan Chase & Co.</MudText>
                 </MudCardContent>
                 <MudCardActions>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default">Buy</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
                     <MudSpacer />
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default">Sell</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
                 </MudCardActions>
             </MudCard>
         </MudPaper>
@@ -53,9 +55,9 @@
                     <MudText Typo="Typo.body2">JPMorgan Chase & Co.</MudText>
                 </MudCardContent>
                 <MudCardActions>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default">Buy</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
                     <MudSpacer />
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default">Sell</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
                 </MudCardActions>
             </MudCard>
         </MudPaper>
@@ -84,9 +86,9 @@
                     <MudText Typo="Typo.body2">JPMorgan Chase & Co.</MudText>
                 </MudCardContent>
                 <MudCardActions>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default">Buy</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
                     <MudSpacer />
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default">Sell</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
                 </MudCardActions>
             </MudCard>
         </MudPaper>
@@ -94,7 +96,13 @@
 </MudGrid>
 
 @code {
-
+    string message = "hi";
+    @*Adapted from https://mudblazor.com/components/dialog#usage *@
+    private void OpenTransactDialog(bool IsBuy, string DialogTitle)
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        DialogService.Show<TransactDialog>("Sell " + DialogTitle, options);
+    }
 }
 
 @*Icons to use

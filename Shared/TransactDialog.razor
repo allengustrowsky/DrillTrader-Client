@@ -1,0 +1,28 @@
+﻿@inject IDialogService DialogService
+
+@*Adapted from https://mudblazor.com/components/dialog#usage *@
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body2">Price per unit: $[amount]</MudText>
+        @*If is buy:*@
+        <MudText Typo="Typo.body2">Cash available: $[cashavailable]</MudText>
+        @*If is sell:*@
+        <MudText Typo="Typo.body2">Units available: $[unitsavailable]</MudText>
+        @*Numeric input adapted from https://mudblazor.com/components/numericfield#basic-numeric-fields*@
+        <MudNumericField @bind-Value="Units" Label="Units" Format="N2" Variant="Variant.Outlined" Step=".2M" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Confirm</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    public decimal Units { get; set; } = 0;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Cancel();
+}
+
+
