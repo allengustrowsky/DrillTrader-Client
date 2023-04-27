@@ -1,25 +1,107 @@
 ﻿@page "/"
+@using System.ComponentModel.DataAnnotations
 
-<h3>Authenticate</h3>
-<button @onclick="increment">Click me</button>
-<p>Current Count: @currentCount</p>
-
-@code {
-    private int currentCount = 0;
-
-    private void increment()
-    {
-        currentCount++;
-    }
+@*Adapted from mublazor components library form example: https://mudblazor.com/components/form#editform-support *@
+@if (showLogin)
+{
+<MudContainer MaxWidth="MaxWidth.Small">
+    <EditForm Model="@model" OnValidSubmit="OnValidSubmit" style="margin-top: 70px;">
+        <DataAnnotationsValidator />
+        <MudCard xs="10" sm="6">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6" xs="10" sm="6">Sign Up</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTextField Label="First name" HelperText="Max. 8 characters"
+                                @bind-Value="model.Username" For="@(() => model.Username)" />
+                <MudTextField Label="Email" Class="mt-3"
+                                @bind-Value="model.Email" For="@(() => model.Email)" />
+                <MudTextField Label="Password" HelperText="Choose a strong password" Class="mt-3"
+                                @bind-Value="model.Password" For="@(() => model.Password)" InputType="InputType.Password" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Sign up</MudButton>
+                <MudSpacer />
+                <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="ToggleLoginView">Log in</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </EditForm>
+</MudContainer>
+}
+else
+{
+<MudContainer MaxWidth="MaxWidth.Small">
+    <EditForm Model="@model" OnValidSubmit="OnValidSubmit" style="margin-top: 70px;">
+        <DataAnnotationsValidator />
+        <MudCard xs="10" sm="6">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6" xs="10" sm="6">Log In</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTextField Label="Api Key" HelperText="Max. 8 characters"
+                                @bind-Value="model.Username" For="@(() => model.Username)" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Log in</MudButton>
+                <MudSpacer />
+                <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="ToggleLoginView">Sign up</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </EditForm>
+</MudContainer>
 }
 
 
-@*@page "/"
+        @code {
+    private bool showLogin = true;
 
-    <PageTitle>Index</PageTitle>
+        private void ToggleLoginView()
+        {
+            showLogin = !showLogin;
+        }
 
-    <h1>Hello, world!</h1>
+        RegisterAccountForm model = new RegisterAccountForm();
+        bool success;
 
-    Welcome to your new app.
+        public class RegisterAccountForm
+        {
+            [Required]
+            [StringLength(8, ErrorMessage = "Name length can't be more than 8.")]
+            public string Username { get; set; }
 
-    <SurveyPrompt Title="How is Blazor working for you?" />*@
+            [Required]
+            [EmailAddress]
+            public string Email { get; set; }
+
+            [Required]
+            [StringLength(30, ErrorMessage = "Password must be at least 8 characters long.", MinimumLength = 8)]
+            public string Password { get; set; }
+
+            [Required]
+            [Compare(nameof(Password))]
+            public string Password2 { get; set; }
+
+        }
+
+        private void OnValidSubmit(EditContext context)
+        {
+            success = true;
+            StateHasChanged();
+        }
+
+        }
+
+
+        @*@page "/"
+
+            <PageTitle>Index</PageTitle>
+
+            <h1>Hello, world!</h1>
+
+            Welcome to your new app.
+
+            <SurveyPrompt Title="How is Blazor working for you?" />*@
