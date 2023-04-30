@@ -10,6 +10,13 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddMudServices();
+//builder.Services.AddHttpClient();chat
+builder.Services.AddScoped(sp =>
+    new HttpClient
+    {
+        //BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+        BaseAddress = new Uri("http://127.0.0.1:3000/")
+    });
 
 var app = builder.Build();
 

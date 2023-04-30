@@ -1,61 +1,91 @@
 ﻿@page "/"
 @using System.ComponentModel.DataAnnotations
 @using client.Data
-
+@using System.Text.Json
+@using System.Text
+@using Newtonsoft.Json.Linq
+@inject HttpClient Http
 @*Adapted from mublazor components library form example: https://mudblazor.com/components/form#editform-support *@
 @if (showLogin)
 {
-<MudContainer MaxWidth="MaxWidth.Small">
-    <EditForm Model="@loginForm" OnValidSubmit="OnValidLogIn" style="margin-top: 70px;">
-        <DataAnnotationsValidator />
-        <MudCard xs="10" sm="6">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6" xs="10" sm="6">Log in</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudTextField Label="Api key" @bind-Value="loginForm.ApiKey" For="@(() => loginForm.ApiKey)" />
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Log in</MudButton>
-                <MudSpacer />
-                <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="ToggleLoginView">Sign up</MudButton>
-            </MudCardActions>
-        </MudCard>
-    </EditForm>
-</MudContainer>
+    <MudContainer MaxWidth="MaxWidth.Small">
+        <EditForm Model="@loginForm" OnValidSubmit="OnValidLogIn" style="margin-top: 70px;">
+            <DataAnnotationsValidator />
+            <MudCard xs="10" sm="6">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" xs="10" sm="6">Log in</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField Label="Api key" @bind-Value="loginForm.ApiKey" For="@(() => loginForm.ApiKey)" />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Log in</MudButton>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="ToggleLoginView">Sign up</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </MudContainer>
 }
 else
 {
-<MudContainer MaxWidth="MaxWidth.Small">
-    <EditForm Model="@signUpModel" OnValidSubmit="OnValidSignUp" style="margin-top: 70px;">
-        <DataAnnotationsValidator />
-        <MudCard xs="10" sm="6">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6" xs="10" sm="6">Sign up</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudTextField Label="First Name" @bind-Value="signUpModel.FirstName" For="@(() => signUpModel.FirstName)" />
-                <MudTextField Label="Last Name" @bind-Value="signUpModel.LastName" For="@(() => signUpModel.LastName)" />
-                <MudTextField Label="Email" @bind-Value="signUpModel.Email" For="@(() => signUpModel.Email)" />
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Sign up</MudButton>
-                <MudSpacer />
-                <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="ToggleLoginView">Log in</MudButton>
-            </MudCardActions>
-        </MudCard>
-    </EditForm>
-</MudContainer>
+    if (showSignupForm)
+    {
+    <MudContainer MaxWidth="MaxWidth.Small">
+        <EditForm Model="@signUpModel" OnValidSubmit="OnValidSignUp" style="margin-top: 70px;">
+            <DataAnnotationsValidator />
+            <MudCard xs="10" sm="6">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" xs="10" sm="6">Sign up</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField Label="First Name" @bind-Value="signUpModel.FirstName" For="@(() => signUpModel.FirstName)" />
+                    <MudTextField Label="Last Name" @bind-Value="signUpModel.LastName" For="@(() => signUpModel.LastName)" />
+                    <MudTextField Label="Email" @bind-Value="signUpModel.Email" For="@(() => signUpModel.Email)" />
+                    <MudText @bind-Value="errorMessage" Typo="Typo.body2" Color="Color.Error">@errorMessage</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Sign up</MudButton>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" @onclick="ToggleLoginView">Log in</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+
+    </MudContainer>
+     } else @*User has just signed up; show their new info*@
+    {
+            <MudContainer MaxWidth="MaxWidth.Large" style="margin-top: 70px;">
+                <MudCard xs="10" sm="6">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6" xs="10" sm="6">Thank you for registering!</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent class="d-flex" style="flex-direction: column; justify-content: center; gap: 25px;">
+                        <MudText Typo="Typo.body1" @bind-Value="newUserInfo.apiKey" style="overflow-wrap: break-word"><b>Api Key</b>: @newUserInfo.apiKey</MudText>
+                        <MudText Typo="Typo.body1" @bind-Value="newUserInfo.first_name"><b>First Name</b>: @newUserInfo.first_name</MudText>
+                        <MudText Typo="Typo.body1" @bind-Value="newUserInfo.last_name"><b>Last Name</b>: @newUserInfo.last_name</MudText>
+                        <MudText Typo="Typo.body1" @bind-Value="newUserInfo.email_address"><b>Email</b>: @newUserInfo.email_address</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudContainer>
+    }
+    
 }
 
 
 @code {
+    // note: could use DefaultRequestHeaders for new apiKey when authenticated? or would that be a problem because everyone using the app would have that?
     private bool showLogin = true;
-
+    private bool showSignupForm = true;
+    private int count = 1;
+    private string errorMessage = "";
+    private SignUpResponse newUserInfo;
     // adapted from mudblazor documentation
     private void ToggleLoginView()
     {
@@ -80,13 +110,105 @@ else
         public string Email { get; set; }
     }
 
-    private void OnValidSignUp(EditContext context)
+    private async Task signUp()
     {
+        errorMessage = "";
+        count = count + 1;
+        Console.WriteLine("sign up");
         success = true;
+        User user = new User { first_name = signUpModel.FirstName, last_name = signUpModel.LastName, email_address = signUpModel.Email };
+        string userString = JsonSerializer.Serialize(user);
+        //Console.WriteLine(user);
+        //Console.WriteLine(JsonContent.Create(user).ToString());
+        //var requestMessage = new HttpRequestMessage()
+        //{
+        //    Method = new HttpMethod("GET"),
+        //    //RequestUri = new Uri(Http.BaseAddress.ToString() + "user"),
+        //    RequestUri = new Uri("http://127.0.0.1:3000/"),
+        //    //Content = JsonContent.Create(user)
+        //};
+        //var response = await Http.SendAsync(requestMessage);
+        //var responseStatusCode = response.StatusCode;
+        //Console.WriteLine(response);
+        //Console.WriteLine(responseStatusCode);
+
+        @* try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0*@
+        // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
+        var requestMessage = new HttpRequestMessage()
+        {
+            Method = new HttpMethod("POST"),
+            RequestUri = new Uri(Http.BaseAddress.ToString() + "user"),
+            Content = JsonContent.Create(user)
+        };
+        var response = await Http.SendAsync(requestMessage);
+        try
+        {
+            response.EnsureSuccessStatusCode(); // exception if not success code
+            string responseInfoString = await response.Content.ReadAsStringAsync();
+            var responseInfo = JObject.Parse(responseInfoString);
+            //string responseInfo = awat response.Content;
+            Console.WriteLine(responseInfo);
+            //Console.WriteLine(reponseInfo.id);
+            newUserInfo = new SignUpResponse();
+            newUserInfo.id = (int)responseInfo["id"];
+            newUserInfo.apiKey = (string)responseInfo["apiKey"];
+            newUserInfo.first_name = (string)responseInfo["first_name"];
+            newUserInfo.last_name = (string)responseInfo["last_name"];
+            newUserInfo.email_address = (string)responseInfo["email_address"];
+
+            showSignupForm = false;
+        } catch (HttpRequestException e)
+        {
+            //READ ERRORS: THANKS CHATGPT
+            using (var streamReader = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            {
+                string responseContent = await streamReader.ReadToEndAsync();
+                errorMessage = JObject.Parse(responseContent)["message"].ToString();
+            }
+            Console.WriteLine("message :{0} ", e.Message);
+        }
+
+        //Content = new StringContent(userString, Encoding.UTF8, "application/json") // adapted from chatGpt
+
+        Console.WriteLine(user);
+        //var response = await Http.SendAsync(requestMessage);
+        //var responseStatusCode = response.StatusCode;
+        //Console.WriteLine($"status code: {responseStatusCode}");
+        //Console.WriteLine(response);
+        //Console.WriteLine(response.RequestMessage);
+        //Console.WriteLine(";-------content: ");
+        //Console.WriteLine(await requestMessage.Content.ReadAsStringAsync());
+        //Console.WriteLine("--------");
+        //Console.WriteLine(response.Content.ReadAsStream);
+        // READ ERRORS: THANKS CHATGPT
+        //using (var streamReader = new StreamReader(await response.Content.ReadAsStreamAsync()))
+        //{
+        //    string responseContent = await streamReader.ReadToEndAsync();
+        //    // Do something with the response content
+        //    Console.WriteLine(responseContent);
+        //}
+
+        //Console.WriteLine(JsonSerializer.Deserialize<System.Net.Http.HttpConnectionResponseContent>(response.Content));
+        @* try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0*@
+        //try
+        //{
+        //    using HttpResponseMessage response = await Http.GetAsync("");
+        //    response.EnsureSuccessStatusCode(); // exception if not success code
+        //    string responseBody = await response.Content.ReadAsStringAsync();
+        //    Console.WriteLine(responseBody);
+        //} catch (HttpRequestException e)
+        //{
+        //    Console.WriteLine("message :{0} ", e.Message);
+        //}
+
+        //someData = await Http.GetFromJsonAsync("")
+        //var content = await response.Content.ReadFromJsonAsync();
         StateHasChanged();
     }
-
-
+    private async Task OnValidSignUp(EditContext context)
+    {
+        await signUp();
+    }
 
     LoginForm loginForm = new LoginForm();
 
@@ -102,4 +224,13 @@ else
         StateHasChanged();
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        //Elements = await httpClient.GetFromJsonAsync<List<Element>>("webapi/periodictable");
+        // sample data - DELETE ME
+        //Elements =
+        //Asset s = new Asset(2, "Microsoft Corp.", "MSFT", 4);
+        Console.WriteLine("test");
+        count = count + 1;
+    }
 }
