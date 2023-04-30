@@ -63,13 +63,13 @@ else
                 <MudCard xs="10" sm="6">
                     <MudCardHeader>
                         <CardHeaderContent>
-                            <MudText Typo="Typo.h6" xs="10" sm="6">Thank you for registering!</MudText>
+                            <MudText Typo="Typo.h6" xs="10" sm="6">Welcome, @newUserInfo.first_name @newUserInfo.last_name</MudText>
                         </CardHeaderContent>
                     </MudCardHeader>
                     <MudCardContent class="d-flex" style="flex-direction: column; justify-content: center; gap: 25px;">
                         <MudText Typo="Typo.body1" @bind-Value="newUserInfo.apiKey" style="overflow-wrap: break-word"><b>Api Key</b>: @newUserInfo.apiKey</MudText>
-                        <MudText Typo="Typo.body1" @bind-Value="newUserInfo.first_name"><b>First Name</b>: @newUserInfo.first_name</MudText>
-                        <MudText Typo="Typo.body1" @bind-Value="newUserInfo.last_name"><b>Last Name</b>: @newUserInfo.last_name</MudText>
+                        @*<MudText Typo="Typo.body1" @bind-Value="newUserInfo.first_name"><b>First Name</b>: @newUserInfo.first_name</MudText>*@
+                        @*<MudText Typo="Typo.body1" @bind-Value="newUserInfo.last_name"><b>Last Name</b>: @newUserInfo.last_name</MudText>*@
                         <MudText Typo="Typo.body1" @bind-Value="newUserInfo.email_address"><b>Email</b>: @newUserInfo.email_address</MudText>
                     </MudCardContent>
                 </MudCard>
