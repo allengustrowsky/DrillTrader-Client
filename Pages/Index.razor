@@ -4,9 +4,17 @@
 @using System.Text.Json
 @using System.Text
 @using Newtonsoft.Json.Linq
+@using System.Net.Http.Headers
 @inject HttpClient Http
 @*Adapted from mublazor components library form example: https://mudblazor.com/components/form#editform-support *@
-@if (showLogin)
+@if (UserState.is_logged_in)
+{
+    <UserInfoCard />
+    <MudContainer MaxWidth="MaxWidth.Large" style="margin-top: 20px;">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" @onclick="LogOut">Log Out</MudButton>
+    </MudContainer>
+}
+else if (showLogin)
 {
     <MudContainer MaxWidth="MaxWidth.Small">
         <EditForm Model="@loginForm" OnValidSubmit="OnValidLogIn" style="margin-top: 70px;">
@@ -31,8 +39,6 @@
 }
 else
 {
-    if (showSignupForm)
-    {
     <MudContainer MaxWidth="MaxWidth.Small">
         <EditForm Model="@signUpModel" OnValidSubmit="OnValidSignUp" style="margin-top: 70px;">
             <DataAnnotationsValidator />
@@ -55,37 +61,14 @@ else
                 </MudCardActions>
             </MudCard>
         </EditForm>
-
     </MudContainer>
-     } else @*User has just signed up; show their new info*@
-    {
-            <MudContainer MaxWidth="MaxWidth.Large" style="margin-top: 70px;">
-                <MudCard xs="10" sm="6">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h6" xs="10" sm="6">Welcome, @newUserInfo.first_name @newUserInfo.last_name</MudText>
-                        </CardHeaderContent>
-                    </MudCardHeader>
-                    <MudCardContent class="d-flex" style="flex-direction: column; justify-content: center; gap: 25px;">
-                        <MudText Typo="Typo.body1" @bind-Value="newUserInfo.apiKey" style="overflow-wrap: break-word"><b>Api Key</b>: @newUserInfo.apiKey</MudText>
-                        @*<MudText Typo="Typo.body1" @bind-Value="newUserInfo.first_name"><b>First Name</b>: @newUserInfo.first_name</MudText>*@
-                        @*<MudText Typo="Typo.body1" @bind-Value="newUserInfo.last_name"><b>Last Name</b>: @newUserInfo.last_name</MudText>*@
-                        <MudText Typo="Typo.body1" @bind-Value="newUserInfo.email_address"><b>Email</b>: @newUserInfo.email_address</MudText>
-                    </MudCardContent>
-                </MudCard>
-            </MudContainer>
-    }
-    
 }
 
 
 @code {
     // note: could use DefaultRequestHeaders for new apiKey when authenticated? or would that be a problem because everyone using the app would have that?
     private bool showLogin = true;
-    private bool showSignupForm = true;
-    private int count = 1;
     private string errorMessage = "";
-    private SignUpResponse newUserInfo;
     // adapted from mudblazor documentation
     private void ToggleLoginView()
     {
@@ -93,12 +76,10 @@ else
     }
 
     SignUpForm signUpModel = new SignUpForm();
-    bool success;
 
     public class SignUpForm
     {
         [Required]
-        //[StringLength(8, ErrorMessage = "Name length can't be less than 1.")]
         public string FirstName { get; set; }
 
         [Required]
@@ -106,16 +87,14 @@ else
 
         [Required]
         [EmailAddress]
-        //[StringLength(30, ErrorMessage = "Password must be at least 8 characters long.", MinimumLength = 8)]
         public string Email { get; set; }
     }
 
     private async Task signUp()
     {
         errorMessage = "";
-        count = count + 1;
-        Console.WriteLine("sign up");
-        success = true;
+        //count = count + 1;
+        //Console.WriteLine("sign up");
         User user = new User { first_name = signUpModel.FirstName, last_name = signUpModel.LastName, email_address = signUpModel.Email };
         string userString = JsonSerializer.Serialize(user);
         //Console.WriteLine(user);
@@ -132,7 +111,7 @@ else
         //Console.WriteLine(response);
         //Console.WriteLine(responseStatusCode);
 
-        @* try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0*@
+        // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
         // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
         var requestMessage = new HttpRequestMessage()
         {
@@ -148,16 +127,17 @@ else
             var responseInfo = JObject.Parse(responseInfoString);
             //string responseInfo = awat response.Content;
             Console.WriteLine(responseInfo);
-            //Console.WriteLine(reponseInfo.id);
-            newUserInfo = new SignUpResponse();
-            newUserInfo.id = (int)responseInfo["id"];
-            newUserInfo.apiKey = (string)responseInfo["apiKey"];
-            newUserInfo.first_name = (string)responseInfo["first_name"];
-            newUserInfo.last_name = (string)responseInfo["last_name"];
-            newUserInfo.email_address = (string)responseInfo["email_address"];
-
-            showSignupForm = false;
-        } catch (HttpRequestException e)
+            UserState.is_logged_in = true;
+            UserState.id = (int)responseInfo["id"];
+            UserState.first_name = (string)responseInfo["first_name"];
+            UserState.last_name = (string)responseInfo["last_name"];
+            UserState.email_address = (string)responseInfo["email_address"];
+            UserState.apiKey = (string)responseInfo["apiKey"];
+            UserState.is_admin = (bool)responseInfo["is_admin"];
+            UserState.created_at = (DateTime)responseInfo["created_at"];
+            UserState.portfolio = (int)responseInfo["portfolio"]["id"];
+        }
+        catch (HttpRequestException e)
         {
             //READ ERRORS: THANKS CHATGPT
             using (var streamReader = new StreamReader(await response.Content.ReadAsStreamAsync()))
@@ -210,6 +190,9 @@ else
         await signUp();
     }
 
+
+
+
     LoginForm loginForm = new LoginForm();
 
     public class LoginForm
@@ -218,19 +201,61 @@ else
         public string ApiKey { get; set; }
     }
 
-    private void OnValidLogIn(EditContext context)
+    private async Task Login()
     {
-        success = true;
+
+        // submit request to server with api key
+        // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
+        // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
+        var requestMessage = new HttpRequestMessage()
+        {
+            Method = new HttpMethod("GET"),
+            RequestUri = new Uri(Http.BaseAddress.ToString() + "user/auth/login"),
+        };
+        requestMessage.Headers.Authorization = new AuthenticationHeaderValue(loginForm.ApiKey);
+        var response = await Http.SendAsync(requestMessage);
+        try
+        {
+            response.EnsureSuccessStatusCode(); // exception if not success code
+            string responseInfoString = await response.Content.ReadAsStringAsync();
+            var responseInfo = JObject.Parse(responseInfoString);
+            Console.WriteLine(responseInfo);
+            UserState.is_logged_in = true;
+            UserState.id = (int)responseInfo["id"];
+            UserState.first_name = (string)responseInfo["first_name"];
+            UserState.last_name = (string)responseInfo["last_name"];
+            UserState.email_address = (string)responseInfo["email_address"];
+            UserState.apiKey = (string)responseInfo["apiKey"];
+            UserState.is_admin = (bool)responseInfo["is_admin"];
+            UserState.created_at = (DateTime)responseInfo["created_at"];
+            UserState.portfolio = (int)responseInfo["portfolio"];
+        }
+        catch (HttpRequestException e)
+        {
+            //READ ERRORS: THANKS CHATGPT
+            using (var streamReader = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            {
+                string responseContent = await streamReader.ReadToEndAsync();
+                Console.WriteLine(responseContent);
+            }
+            Console.WriteLine("message :{0} ", e.Message);
+        }
+    }
+
+    private async Task OnValidLogIn(EditContext context)
+    {
+        await Login();
         StateHasChanged();
     }
 
     protected override async Task OnInitializedAsync()
     {
-        //Elements = await httpClient.GetFromJsonAsync<List<Element>>("webapi/periodictable");
-        // sample data - DELETE ME
-        //Elements =
-        //Asset s = new Asset(2, "Microsoft Corp.", "MSFT", 4);
-        Console.WriteLine("test");
-        count = count + 1;
+        return;
+    }
+
+    public void LogOut()
+    {
+        UserState.is_logged_in = false;
+        StateHasChanged();
     }
 }

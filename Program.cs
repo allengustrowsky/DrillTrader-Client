@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using client.Data;
 using MudBlazor.Services;
+using client.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,7 @@ builder.Services.AddScoped(sp =>
         //BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
         BaseAddress = new Uri("http://127.0.0.1:3000/")
     });
-
+builder.Services.AddSingleton<UserState>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
