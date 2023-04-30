@@ -26,7 +26,8 @@ else if (showLogin)
                     </CardHeaderContent>
                 </MudCardHeader>
                 <MudCardContent>
-                    <MudTextField Label="Api key" @bind-Value="loginForm.ApiKey" For="@(() => loginForm.ApiKey)" />
+                    <MudTextField Label="Api Key" @bind-Value="loginForm.ApiKey" For="@(() => loginForm.ApiKey)" />
+                    <MudText @bind-Value="errorLoginMessage" Typo="Typo.body2" Color="Color.Error">@errorLoginMessage</MudText>
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Log in</MudButton>
@@ -69,6 +70,7 @@ else
     // note: could use DefaultRequestHeaders for new apiKey when authenticated? or would that be a problem because everyone using the app would have that?
     private bool showLogin = true;
     private string errorMessage = "";
+    private string errorLoginMessage = "";
     // adapted from mudblazor documentation
     private void ToggleLoginView()
     {
@@ -239,6 +241,8 @@ else
                 Console.WriteLine(responseContent);
             }
             Console.WriteLine("message :{0} ", e.Message);
+            errorLoginMessage = "Invalid Api Key!";
+
         }
     }
 
