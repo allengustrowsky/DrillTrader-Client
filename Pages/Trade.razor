@@ -5,123 +5,129 @@
 
 <MudText Typo="Typo.h2" Align="Align.Center">Assets</MudText>
 
-@*Casy*@
-<MudText Typo="Typo.h4" class="mt-16">Cash</MudText>
-<MudGrid class="mt-3">
-    <MudItem Width="250px" Height="250px">
-        <MudPaper>
-            <MudCard Width="250px" Height="" Elevation="3">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <div style="width: 100%; display: flex; justify-content: space-between;">
-                            <MudText Typo="Typo.h5" Color="Color.Secondary">Cash</MudText>
-                            <MudIcon Icon="@Icons.Material.Outlined.Balance" Title="Cash" />
-                        </div>
-                    </CardHeaderContent>
-                </MudCardHeader>
+@if (!UserState.is_logged_in)
+{
+    <NotAuthenticatedCard />
+} else
+{
+    @*Cash*@
+    <MudText Typo="Typo.h4" class="mt-16">Cash</MudText>
+    <MudGrid class="mt-3">
+        <MudItem Width="250px" Height="250px">
+            <MudPaper>
+                <MudCard Width="250px" Height="" Elevation="3">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <div style="width: 100%; display: flex; justify-content: space-between;">
+                                <MudText Typo="Typo.h5" Color="Color.Secondary">Cash</MudText>
+                                <MudIcon Icon="@Icons.Material.Outlined.Balance" Title="Cash" />
+                            </div>
+                        </CardHeaderContent>
+                    </MudCardHeader>
 
-                <MudCardContent>
-                    <MudText Typo="Typo.h4" Color="Color.Primary">$13602.42</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenCashDialog(false, "Withdraw"))">Withdraw</MudButton>
-                    <MudSpacer />
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenCashDialog(true, "Deposit"))">Deposit</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+                    <MudCardContent>
+                        <MudText Typo="Typo.h4" Color="Color.Primary">$13602.42</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenCashDialog(false, "Withdraw"))">Withdraw</MudButton>
+                        <MudSpacer />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenCashDialog(true, "Deposit"))">Deposit</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
-@*Cryptocurrency*@
-<MudText Typo="Typo.h4" class="mt-16">Cryptocurrency</MudText>
-<MudGrid class="mt-3">
-    <MudItem Width="250px" Height="250px">
-        <MudPaper>
-            <MudCard Width="250px" Height="" Elevation="3">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <div style="width: 100%; display: flex; justify-content: space-between;">
-                            <MudText Typo="Typo.h5" Color="Color.Secondary">JPM</MudText>
-                            <MudIcon Icon="@Icons.Filled.CurrencyBitcoin" Title="Cash" />
-                        </div>
-                    </CardHeaderContent>
-                </MudCardHeader>
+    @*Cryptocurrency*@
+    <MudText Typo="Typo.h4" class="mt-16">Cryptocurrency</MudText>
+    <MudGrid class="mt-3">
+        <MudItem Width="250px" Height="250px">
+            <MudPaper>
+                <MudCard Width="250px" Height="" Elevation="3">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <div style="width: 100%; display: flex; justify-content: space-between;">
+                                <MudText Typo="Typo.h5" Color="Color.Secondary">JPM</MudText>
+                                <MudIcon Icon="@Icons.Filled.CurrencyBitcoin" Title="Cash" />
+                            </div>
+                        </CardHeaderContent>
+                    </MudCardHeader>
 
-                <MudCardContent>
-                    <MudText Typo="Typo.h4" Color="Color.Primary">$13602.42</MudText>
-                    <MudText Typo="Typo.body2">JPMorgan Chase & Co.</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
-                    <MudSpacer />
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+                    <MudCardContent>
+                        <MudText Typo="Typo.h4" Color="Color.Primary">$13602.42</MudText>
+                        <MudText Typo="Typo.body2">JPMorgan Chase & Co.</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
+                        <MudSpacer />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
 
-@*Index Funds*@
-<MudText Typo="Typo.h4" class="mt-16">Index Funds</MudText>
-<MudGrid class="mt-3">
-    <MudItem Width="250px" Height="250px">
-        <MudPaper>
-            <MudCard Width="250px" Height="" Elevation="3">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <div style="width: 100%; display: flex; justify-content: space-between;">
-                            <MudText Typo="Typo.h5" Color="Color.Secondary">JPM</MudText>
-                            <MudIcon Icon="@Icons.Filled.StackedBarChart" Title="Cash" />
-                        </div>
-                    </CardHeaderContent>
-                </MudCardHeader>
+    @*Index Funds*@
+    <MudText Typo="Typo.h4" class="mt-16">Index Funds</MudText>
+    <MudGrid class="mt-3">
+        <MudItem Width="250px" Height="250px">
+            <MudPaper>
+                <MudCard Width="250px" Height="" Elevation="3">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <div style="width: 100%; display: flex; justify-content: space-between;">
+                                <MudText Typo="Typo.h5" Color="Color.Secondary">JPM</MudText>
+                                <MudIcon Icon="@Icons.Filled.StackedBarChart" Title="Cash" />
+                            </div>
+                        </CardHeaderContent>
+                    </MudCardHeader>
 
-                <MudCardContent>
-                    <MudText Typo="Typo.h4" Color="Color.Primary">$136.07</MudText>
-                    <MudText Typo="Typo.body2">JPMorgan Chase & Co.</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
-                    <MudSpacer />
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+                    <MudCardContent>
+                        <MudText Typo="Typo.h4" Color="Color.Primary">$136.07</MudText>
+                        <MudText Typo="Typo.body2">JPMorgan Chase & Co.</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
+                        <MudSpacer />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
-@*Stocks*@
-<MudText Typo="Typo.h4" class="mt-16">Stocks</MudText>
-<MudGrid class="mt-3">
-    <MudItem Width="250px" Height="250px">
-        <MudPaper>
-            <MudCard Width="250px" Height="" Elevation="3">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <div style="width: 100%; display: flex; justify-content: space-between;">
-                            <MudText Typo="Typo.h5" Color="Color.Secondary">JPM</MudText>
-                            @*<MudSpacer />*@
-                            <MudIcon Icon="@Icons.Outlined.Assessment" Title="Cash" />
-                        </div>
-                    </CardHeaderContent>
-                </MudCardHeader>
+    @*Stocks*@
+    <MudText Typo="Typo.h4" class="mt-16">Stocks</MudText>
+    <MudGrid class="mt-3">
+        <MudItem Width="250px" Height="250px">
+            <MudPaper>
+                <MudCard Width="250px" Height="" Elevation="3">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <div style="width: 100%; display: flex; justify-content: space-between;">
+                                <MudText Typo="Typo.h5" Color="Color.Secondary">JPM</MudText>
+                                @*<MudSpacer />*@
+                                <MudIcon Icon="@Icons.Outlined.Assessment" Title="Cash" />
+                            </div>
+                        </CardHeaderContent>
+                    </MudCardHeader>
 
-                <MudCardContent>
-                    @*add hr?*@
-                    <MudText Typo="Typo.h4" Color="Color.Primary">$136.07</MudText>
-                    <MudText Typo="Typo.body2">JPMorgan Chase & Co.</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
-                    <MudSpacer />
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+                    <MudCardContent>
+                        @*add hr?*@
+                        <MudText Typo="Typo.h4" Color="Color.Primary">$136.07</MudText>
+                        <MudText Typo="Typo.body2">JPMorgan Chase & Co.</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
+                        <MudSpacer />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
 
 @code {
     string message = "hi";
