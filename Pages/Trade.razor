@@ -1,5 +1,9 @@
 ﻿@page "/trade"
 @*@layout PrimaryLayout*@
+@inject HttpClient Http
+@using Newtonsoft.Json.Linq
+@using System.Net.Http.Headers
+@using client.Data
 @inject IDialogService DialogService
 
 
@@ -8,8 +12,22 @@
 @if (!UserState.is_logged_in)
 {
     <NotAuthenticatedCard />
-} else
+}
+else
 {
+    if (LoadPriceDataErrorMessage != "")
+    {
+        <MudContainer MaxWidth="MaxWidth.Large" style="margin-top: 70px;">
+            <MudCard xs="10" sm="6" Elevation="0">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" xs="10" sm="6" style="text-align: center;" @bind-value="LoadPriceDataErrorMessage">@LoadPriceDataErrorMessage</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+            </MudCard>
+        </MudContainer>
+    }
+
     @*Cash*@
     <MudText Typo="Typo.h4" class="mt-16">Cash</MudText>
     <MudGrid class="mt-3">
@@ -131,6 +149,8 @@
 
 @code {
     string message = "hi";
+    string LoadPriceDataErrorMessage = "";
+
     @*Adapted from https://mudblazor.com/components/dialog#usage *@
     private void OpenTransactDialog(bool IsBuy, string DialogTitle)
     {
@@ -149,25 +169,58 @@
 
         DialogService.Show<CashDialog>(DialogTitle + " Cash", parameters, options);
     }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("hello there -------------------------------------");
+        if (UserState.is_logged_in)
+        {
+            // get price data
+            // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
+            // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
+            var requestMessage = new HttpRequestMessage()
+            {
+                Method = new HttpMethod("GET"),
+                RequestUri = new Uri(Http.BaseAddress.ToString() + "price-data")
+            };
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue(UserState.apiKey);
+            var response = await Http.SendAsync(requestMessage);
+            try
+            {
+                response.EnsureSuccessStatusCode(); // exception if not success code
+                string responseInfoString = await response.Content.ReadAsStringAsync();
+                var responseInfo = JObject.Parse(responseInfoString);
+                // store price data in state
+                foreach (var asset in responseInfo)
+                {
+                    AssetPriceData assetData = new AssetPriceData();
+                    assetData.name = (string)asset.Value["name"];
+                    assetData.currentPrice = (double)asset.Value["currentPrice"];
+                    assetData.time = (long)asset.Value["time"];
+                    assetData.assetType = (string)asset.Value["assetType"];
+                    PriceData.Data.Add((string)asset.Key, assetData);
+                }
+                LoadPriceDataErrorMessage = "";
+            }
+            catch (HttpRequestException e)
+            {
+                //READ ERRORS: THANKS CHATGPT
+                using (var streamReader = new StreamReader(await response.Content.ReadAsStreamAsync()))
+                {
+                    string responseContent = await streamReader.ReadToEndAsync();
+                    Console.WriteLine(responseContent);
+                }
+                Console.WriteLine("message :{0} ", e.Message);
+                LoadPriceDataErrorMessage = "An error occrred. Unable to load price data.";
+
+            }
+        }
+        StateHasChanged();
+        return;
+
+
+    }
+
 }
 
-@*Icons to use
-    Cash
-            -balance
-    Bitcoin
-            - CurrencyBitcoi
-
-    IndexFund
-            - stackedbarchart
-     Stock
-            -assessment
-
-    - Balance
-    -assessment
-
-    - CurrencyExchange
-    - trend
-    - assessment
-    - barchart
-        - candlestick
-*@
+@*CURRENT: get data displayed adn do polling, then do transactions*@
