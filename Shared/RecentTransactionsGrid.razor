@@ -1,0 +1,21 @@
+﻿@using client.Data
+
+@*This MudDataGrid adapted from https://mudblazor.com/components/datagrid#default-data-grid*@
+<MudDataGrid Items="@Elements.Take(10)" Class="my-12">
+    <Columns>
+        <PropertyColumn Property="x => x.asset.name" Title="Asset" />
+        @*<PropertyColumn Property="x => x.Asset.AssetType" Title="Type" />*@
+        <PropertyColumn Property="x => x.asset.ticker_symbol" Title="Symbol" />
+        <PropertyColumn Property="x => x.units" Title="Units" />
+        <PropertyColumn Property="x => x.price_per_unit" Title="Price/Unit" />
+        <PropertyColumn Property="x => x.is_buy" Title="Buy?" /> @*Buy/Sell*@
+        <PropertyColumn Property="x => x.created_at" Title="Created At" />
+    </Columns>
+</MudDataGrid>
+
+@code {
+    // List of recent transactions
+    // This code block adapted from https://mudblazor.com/components/datagrid#default-data-grid  
+    private IEnumerable<Transaction> Elements = client.Data.RecentTransactions.Data;
+}
+

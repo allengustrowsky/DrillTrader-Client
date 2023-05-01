@@ -75,8 +75,8 @@ else
         @*This div block adapted from https://mudblazor.com/components/piechart#basic-pie*@
         @*<MudPaper Class="pa-4">*@
         @*<div Class="pa-4">
-            <MudChart ChartType="ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" />
-        </div>*@
+                <MudChart ChartType="ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" />
+            </div>*@
         @*</MudPaper>*@
     }
 
@@ -84,18 +84,24 @@ else
     @*Breakdown*@
 
     @*Transactions*@
-    @*This MudDataGrid adapted from https://mudblazor.com/components/datagrid#default-data-grid*@
-    <MudDataGrid Items="@Elements.Take(4)" Class="mt-12">
-        <Columns>
-            <PropertyColumn Property="x => x.Asset.Name" Title="Asset" />
-            <PropertyColumn Property="x => x.Asset.AssetType" Title="Type" />
-            <PropertyColumn Property="x => x.Asset.Symbol" Title="Symbol" />
-            <PropertyColumn Property="x => x.Units" Title="Units" />
-            <PropertyColumn Property="x => x.Ppu" Title="Price/Unit" />
-            <PropertyColumn Property="x => x.IsBuy" Title="Type" /> @*Buy/Sell*@
-            <PropertyColumn Property="x => x.CreatedAt" Title="Created At" />
-        </Columns>
-    </MudDataGrid>
+    @if (transactionsReady)
+    {
+        <RecentTransactionsGrid />
+
+        @*This MudDataGrid adapted from https://mudblazor.com/components/datagrid#default-data-grid*@
+        <!--<MudDataGrid Items="@Elements.Take(4)" Class="mt-12">
+            <Columns>
+                <PropertyColumn Property="x => x.Asset.Name" Title="Asset" />
+                <PropertyColumn Property="x => x.Asset.AssetType" Title="Type" />
+                <PropertyColumn Property="x => x.Asset.Symbol" Title="Symbol" />
+                <PropertyColumn Property="x => x.Units" Title="Units" />
+                <PropertyColumn Property="x => x.Ppu" Title="Price/Unit" />
+                <PropertyColumn Property="x => x.IsBuy" Title="Type" />--> @*Buy/Sell*@
+                <!--<PropertyColumn Property="x => x.CreatedAt" Title="Created At" />
+            </Columns>
+        </MudDataGrid>-->
+    }
+
 </div>
 }
 
@@ -103,6 +109,7 @@ else
     private string LoadPriceDataErrorMessage = "";
     private bool portfolioValueReady = false;
     private bool portfolioAssetReady = false;
+    private bool transactionsReady = false;
     //private double[] ChartData = new double[] {0};
     //private double[] ChartData = new double[] { 90, 79, 72, 69, 62, 62, 55, 65, 70 };
     //private List<double> ChartData = new List<double>();
@@ -125,7 +132,7 @@ else
 
     // List of recent transactions
     // This code block adapted from https://mudblazor.com/components/datagrid#default-data-grid
-    private IEnumerable<Transaction> Elements = new List<Transaction>();
+    //private IEnumerable<Transaction> Elements = new List<Transaction>();
 
 
     private async Task getData()
@@ -193,45 +200,49 @@ else
             /////////////////////////////////////////////////////////////////////////
             // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
             // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
-            if (PortfolioAssetTotal.Data.Count == 0)
+            //if (PortfolioAssetTotal.Data.Count == 0)
+            //{
+
+            var requestMessage2 = new HttpRequestMessage()
             {
-                var requestMessage2 = new HttpRequestMessage()
+                Method = new HttpMethod("GET"),
+                RequestUri = new Uri(Http.BaseAddress.ToString() + "asset-type")
+            };
+            requestMessage2.Headers.Authorization = new AuthenticationHeaderValue(UserState.apiKey);
+            var response2 = await Http.SendAsync(requestMessage2);
+            try
+            {
+                response2.EnsureSuccessStatusCode(); // exception if not success code
+                string responseInfoString = await response2.Content.ReadAsStringAsync();
+                Console.WriteLine($"response: {responseInfoString}");
+                var responseInfo = JArray.Parse(responseInfoString);
+                if (PortfolioAssetTotal.Data.Count != 0)
                 {
-                    Method = new HttpMethod("GET"),
-                    RequestUri = new Uri(Http.BaseAddress.ToString() + "asset-type")
-                };
-                requestMessage2.Headers.Authorization = new AuthenticationHeaderValue(UserState.apiKey);
-                var response2 = await Http.SendAsync(requestMessage2);
-                try
-                {
-                    response2.EnsureSuccessStatusCode(); // exception if not success code
-                    string responseInfoString = await response2.Content.ReadAsStringAsync();
-                    Console.WriteLine($"response: {responseInfoString}");
-                    var responseInfo = JArray.Parse(responseInfoString);
-
-                    foreach (var assetType in responseInfo)
-                    {
-                        PortfolioAssetTotalDatum temp = new PortfolioAssetTotalDatum();
-                        temp.name = (string)assetType["name"];
-                        temp.value = 0;
-                        PortfolioAssetTotal.Data.Add((int)assetType["id"], temp);
-                        PortfolioAssetTotal.LabelList.Add((string)assetType["name"]);
-                    }
-                    portfolioAssetReady = true;
+                    PortfolioAssetTotal.Data = new Dictionary<int, PortfolioAssetTotalDatum>();
                 }
-                catch (HttpRequestException exc)
+                foreach (var assetType in responseInfo)
                 {
-                    //READ ERRORS: THANKS CHATGPT
-                    using (var streamReader = new StreamReader(await response2.Content.ReadAsStreamAsync()))
-                    {
-                        string responseContent = await streamReader.ReadToEndAsync();
-                        Console.WriteLine(responseContent);
-                    }
-                    Console.WriteLine("message :{0} ", exc.Message);
-                    LoadPriceDataErrorMessage = "An error occrred. Unable to load price data.";
-
+                    PortfolioAssetTotalDatum temp = new PortfolioAssetTotalDatum();
+                    temp.name = (string)assetType["name"];
+                    temp.value = 0;
+                    PortfolioAssetTotal.Data.Add((int)assetType["id"], temp);
+                    PortfolioAssetTotal.LabelList.Add((string)assetType["name"]);
                 }
+                portfolioAssetReady = true;
             }
+            catch (HttpRequestException exc)
+            {
+                //READ ERRORS: THANKS CHATGPT
+                using (var streamReader = new StreamReader(await response2.Content.ReadAsStreamAsync()))
+                {
+                    string responseContent = await streamReader.ReadToEndAsync();
+                    Console.WriteLine(responseContent);
+                }
+                Console.WriteLine("message :{0} ", exc.Message);
+                LoadPriceDataErrorMessage = "An error occrred. Unable to load price data.";
+
+            }
+            //}
 
             //////////////////////////////////////////////////////////////////////
             ///////////////// get portfolio asset data for pie chart //////////////
@@ -267,6 +278,66 @@ else
             {
                 //READ ERRORS: THANKS CHATGPT
                 using (var streamReader = new StreamReader(await response3.Content.ReadAsStreamAsync()))
+                {
+                    string responseContent = await streamReader.ReadToEndAsync();
+                    Console.WriteLine(responseContent);
+                }
+                Console.WriteLine("message :{0} ", exc.Message);
+                LoadPriceDataErrorMessage = "An error occrred. Unable to load price data.";
+
+            }
+
+            //////////////////////////////////////////////////////////////////////
+            ///////////////// get recent transactions for data grid //////////////
+            /////////////////////////////////////////////////////////////////////////
+            // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
+            // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
+            var requestMessage4 = new HttpRequestMessage()
+            {
+                Method = new HttpMethod("GET"),
+                RequestUri = new Uri(Http.BaseAddress.ToString() + $"transaction/{UserState.id}/10") // limit to 10 transactions
+            };
+            requestMessage4.Headers.Authorization = new AuthenticationHeaderValue(UserState.apiKey);
+            var response4 = await Http.SendAsync(requestMessage4);
+            try
+            {
+                response4.EnsureSuccessStatusCode(); // exception if not success code
+                string responseInfoString = await response4.Content.ReadAsStringAsync();
+                Console.WriteLine($"response: {responseInfoString}");
+                var responseInfo = JArray.Parse(responseInfoString);
+                //if ()
+                // do refresh test
+                if (client.Data.RecentTransactions.Data.Count > 0)
+                {
+                    client.Data.RecentTransactions.Data = new List<Transaction>();
+                }
+
+                foreach (var transaction in responseInfo)
+                {
+                    Console.WriteLine(transaction);
+                    TransactionAsset temp = new TransactionAsset();
+                    temp.id = (int)transaction["asset"]["id"];
+                    temp.name = (string)transaction["asset"]["name"];
+                    temp.ticker_symbol = (string)transaction["asset"]["ticker_symbol"];
+                    temp.asset_type = (int)transaction["asset"]["asset_type"];
+                    Transaction tempTrans = new Transaction();
+                    tempTrans.id = (int)transaction["id"];
+                    tempTrans.units = (double)transaction["id"];
+                    tempTrans.price_per_unit = (double)transaction["price_per_unit"];
+                    tempTrans.is_buy = (bool)transaction["is_buy"];
+                    tempTrans.created_at = (DateTime)transaction["created_at"];
+                    tempTrans.asset = temp;
+                    tempTrans.portfolio = (int)transaction["portfolio"];
+                    client.Data.RecentTransactions.Data.Add(tempTrans);
+                    Console.WriteLine(transaction);
+                }
+
+                transactionsReady = true;
+            }
+            catch (HttpRequestException exc)
+            {
+                //READ ERRORS: THANKS CHATGPT
+                using (var streamReader = new StreamReader(await response4.Content.ReadAsStreamAsync()))
                 {
                     string responseContent = await streamReader.ReadToEndAsync();
                     Console.WriteLine(responseContent);
