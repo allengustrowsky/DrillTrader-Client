@@ -4,7 +4,9 @@
 @using Newtonsoft.Json.Linq
 @using System.Net.Http.Headers
 @using client.Data
+@using System.Threading
 @inject IDialogService DialogService
+@*@inject Microsoft.AspNetCore.Components.ComponentBase ComponentBase*@
 
 
 <MudText Typo="Typo.h2" Align="Align.Center">Assets</MudText>
@@ -21,7 +23,7 @@ else
             <MudCard xs="10" sm="6" Elevation="0">
                 <MudCardHeader>
                     <CardHeaderContent>
-                        <MudText Typo="Typo.h6" xs="10" sm="6" style="text-align: center;" @bind-value="LoadPriceDataErrorMessage">@LoadPriceDataErrorMessage</MudText>
+                        <MudText Typo="Typo.h6" Color="Color.Error" xs="10" sm="6" style="text-align: center;" @bind-value="LoadPriceDataErrorMessage">@LoadPriceDataErrorMessage</MudText>
                     </CardHeaderContent>
                 </MudCardHeader>
             </MudCard>
@@ -31,125 +33,152 @@ else
     @*Cash*@
     <MudText Typo="Typo.h4" class="mt-16">Cash</MudText>
     <MudGrid class="mt-3">
-        <MudItem Width="250px" Height="250px">
-            <MudPaper>
-                <MudCard Width="250px" Height="" Elevation="3">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <div style="width: 100%; display: flex; justify-content: space-between;">
-                                <MudText Typo="Typo.h5" Color="Color.Secondary">Cash</MudText>
-                                <MudIcon Icon="@Icons.Material.Outlined.Balance" Title="Cash" />
-                            </div>
-                        </CardHeaderContent>
-                    </MudCardHeader>
+        @foreach (var assetItem in PriceData.Data)
+        {
+            if (assetItem.Value.assetType == "Cash")
+            {
+                <MudItem Width="250px" Height="250px">
+                    <MudPaper>
+                        <MudCard Width="250px" Height="" Elevation="3">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <div style="width: 100%; display: flex; justify-content: space-between;">
+                                        <MudText Typo="Typo.h5" Color="Color.Secondary">@assetItem.Value.name</MudText>
+                                        <MudIcon Icon="@Icons.Material.Outlined.Balance" Title="@assetItem.Value.name" />
+                                    </div>
+                                </CardHeaderContent>
+                            </MudCardHeader>
 
-                    <MudCardContent>
-                        <MudText Typo="Typo.h4" Color="Color.Primary">$13602.42</MudText>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenCashDialog(false, "Withdraw"))">Withdraw</MudButton>
-                        <MudSpacer />
-                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenCashDialog(true, "Deposit"))">Deposit</MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </MudPaper>
-        </MudItem>
+                            @*<MudCardContent>
+                                    <MudText Typo="Typo.h4" Color="Color.Primary">$@assetItem.Value.currentPrice</MudText>
+                                </MudCardContent>*@
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenCashDialog(false, "Withdraw"))">Withdraw</MudButton>
+                                <MudSpacer />
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenCashDialog(true, "Deposit"))">Deposit</MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudPaper>
+                </MudItem>
+            }
+        }
+
     </MudGrid>
 
     @*Cryptocurrency*@
     <MudText Typo="Typo.h4" class="mt-16">Cryptocurrency</MudText>
     <MudGrid class="mt-3">
-        <MudItem Width="250px" Height="250px">
-            <MudPaper>
-                <MudCard Width="250px" Height="" Elevation="3">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <div style="width: 100%; display: flex; justify-content: space-between;">
-                                <MudText Typo="Typo.h5" Color="Color.Secondary">JPM</MudText>
-                                <MudIcon Icon="@Icons.Filled.CurrencyBitcoin" Title="Cash" />
-                            </div>
-                        </CardHeaderContent>
-                    </MudCardHeader>
+        @foreach (var assetItem in PriceData.Data)
+        {
+            if (assetItem.Value.assetType == "Cryptocurrency")
+            {
+                <MudItem Width="280px" Height="250px">
+                    <MudPaper>
+                        <MudCard Width="280px" Height="" Elevation="3">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <div style="width: 100%; display: flex; justify-content: space-between;">
+                                        <MudText Typo="Typo.h5" Color="Color.Secondary">@assetItem.Key</MudText>
+                                        <MudIcon Icon="@Icons.Filled.CurrencyBitcoin" Title="@assetItem.Value.name" />
+                                    </div>
+                                </CardHeaderContent>
+                            </MudCardHeader>
 
-                    <MudCardContent>
-                        <MudText Typo="Typo.h4" Color="Color.Primary">$13602.42</MudText>
-                        <MudText Typo="Typo.body2">JPMorgan Chase & Co.</MudText>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
-                        <MudSpacer />
-                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </MudPaper>
-        </MudItem>
+                            <MudCardContent>
+                                <MudText Typo="Typo.h4" Color="Color.Primary">$@assetItem.Value.currentPrice</MudText>
+                                <MudText Typo="Typo.body2">@assetItem.Value.name</MudText>
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
+                                <MudSpacer />
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudPaper>
+                </MudItem>
+            }
+        }
     </MudGrid>
 
 
     @*Index Funds*@
     <MudText Typo="Typo.h4" class="mt-16">Index Funds</MudText>
     <MudGrid class="mt-3">
-        <MudItem Width="250px" Height="250px">
-            <MudPaper>
-                <MudCard Width="250px" Height="" Elevation="3">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <div style="width: 100%; display: flex; justify-content: space-between;">
-                                <MudText Typo="Typo.h5" Color="Color.Secondary">JPM</MudText>
-                                <MudIcon Icon="@Icons.Filled.StackedBarChart" Title="Cash" />
-                            </div>
-                        </CardHeaderContent>
-                    </MudCardHeader>
+        @foreach (var assetItem in PriceData.Data)
+        {
+            if (assetItem.Value.assetType == "Index Fund")
+            {
+                <MudItem Width="280px" Height="250px">
+                    <MudPaper>
+                        <MudCard Width="280px" Height="" Elevation="3">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <div style="width: 100%; display: flex; justify-content: space-between;">
+                                        <MudText Typo="Typo.h5" Color="Color.Secondary">@assetItem.Key</MudText>
+                                        <MudIcon Icon="@Icons.Filled.StackedBarChart" Title="@assetItem.Value.name" />
+                                    </div>
+                                </CardHeaderContent>
+                            </MudCardHeader>
 
-                    <MudCardContent>
-                        <MudText Typo="Typo.h4" Color="Color.Primary">$136.07</MudText>
-                        <MudText Typo="Typo.body2">JPMorgan Chase & Co.</MudText>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
-                        <MudSpacer />
-                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </MudPaper>
-        </MudItem>
+                            <MudCardContent>
+                                <MudText Typo="Typo.h4" Color="Color.Primary">$@assetItem.Value.currentPrice</MudText>
+                                <MudText Typo="Typo.body2">@assetItem.Value.name</MudText>
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
+                                <MudSpacer />
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudPaper>
+                </MudItem>
+            }
+        }
     </MudGrid>
 
     @*Stocks*@
     <MudText Typo="Typo.h4" class="mt-16">Stocks</MudText>
     <MudGrid class="mt-3">
-        <MudItem Width="250px" Height="250px">
-            <MudPaper>
-                <MudCard Width="250px" Height="" Elevation="3">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <div style="width: 100%; display: flex; justify-content: space-between;">
-                                <MudText Typo="Typo.h5" Color="Color.Secondary">JPM</MudText>
-                                @*<MudSpacer />*@
-                                <MudIcon Icon="@Icons.Outlined.Assessment" Title="Cash" />
-                            </div>
-                        </CardHeaderContent>
-                    </MudCardHeader>
+        @foreach (var assetItem in PriceData.Data)
+        {
+            if (assetItem.Value.assetType == "Stock")
+            {
+                <MudItem Width="280px" Height="250px">
+                    <MudPaper>
+                        <MudCard Width="280px" Height="" Elevation="3">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <div style="width: 100%; display: flex; justify-content: space-between;">
+                                        <MudText Typo="Typo.h5" Color="Color.Secondary">@assetItem.Key</MudText>
+                                        @*<MudSpacer />*@
+                                        <MudIcon Icon="@Icons.Outlined.Assessment" Title="@assetItem.Value.name" />
+                                    </div>
+                                </CardHeaderContent>
+                            </MudCardHeader>
 
-                    <MudCardContent>
-                        @*add hr?*@
-                        <MudText Typo="Typo.h4" Color="Color.Primary">$136.07</MudText>
-                        <MudText Typo="Typo.body2">JPMorgan Chase & Co.</MudText>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
-                        <MudSpacer />
-                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </MudPaper>
-        </MudItem>
+                            <MudCardContent>
+                                @*add hr?*@
+                                <MudText Typo="Typo.h4" Color="Color.Primary">$@assetItem.Value.currentPrice</MudText>
+                                <MudText Typo="Typo.body2">@assetItem.Value.name</MudText>
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
+                                <MudSpacer />
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudPaper>
+                </MudItem>
+            }
+        }
     </MudGrid>
 }
 
 @code {
     string message = "hi";
     string LoadPriceDataErrorMessage = "";
+    private System.Threading.Timer poller;
+    //[CascadingParameter(Name = "PollingToggleParam")] protected bool PollingToggleParam { get; set; } = true;
 
     @*Adapted from https://mudblazor.com/components/dialog#usage *@
     private void OpenTransactDialog(bool IsBuy, string DialogTitle)
@@ -166,13 +195,27 @@ else
         var options = new DialogOptions { CloseOnEscapeKey = true };
         var parameters = new DialogParameters();
         parameters.Add("IsDeposit", IsDeposit);
+        //parameters.Add()
 
         DialogService.Show<CashDialog>(DialogTitle + " Cash", parameters, options);
     }
 
-    protected override async Task OnInitializedAsync()
+    //private void StartPolling()
+    //{
+    //    poller = new Timer(async (state) =>
+    //    {
+    //        await getData(state);
+    //    }, null, 50, 1000);
+    //    //getData(null);
+    //}
+
+    //private async void getData(Object state)
+    //private async Task getData(object state)
+    private async Task getData()
     {
-        Console.WriteLine("hello there -------------------------------------");
+        //await Task.Run(async () =>
+        //{
+        Console.WriteLine("it runnnnsss!!!");
         if (UserState.is_logged_in)
         {
             // get price data
@@ -191,18 +234,34 @@ else
                 string responseInfoString = await response.Content.ReadAsStringAsync();
                 var responseInfo = JObject.Parse(responseInfoString);
                 // store price data in state
-                foreach (var asset in responseInfo)
+                if (PriceData.Data.Count > 0) // avoid overwriting price data that's already in state
                 {
-                    AssetPriceData assetData = new AssetPriceData();
-                    assetData.name = (string)asset.Value["name"];
-                    assetData.currentPrice = (double)asset.Value["currentPrice"];
-                    assetData.time = (long)asset.Value["time"];
-                    assetData.assetType = (string)asset.Value["assetType"];
-                    PriceData.Data.Add((string)asset.Key, assetData);
+                    Console.WriteLine("state already initialized, modifying");
+                    foreach (var asset in responseInfo)
+                    {
+                        Console.WriteLine($"before: {asset.Key} ${PriceData.Data[asset.Key].currentPrice}");
+                        PriceData.Data[asset.Key].currentPrice = (double)asset.Value["currentPrice"];
+                        Console.WriteLine($"after: {asset.Key} ${PriceData.Data[asset.Key].currentPrice}");
+                    }
                 }
+                else // price state is empty, so initialize it
+                {
+                    Console.WriteLine("initializing state...");
+                    foreach (var asset in responseInfo)
+                    {
+                        AssetPriceData assetData = new AssetPriceData();
+                        assetData.name = (string)asset.Value["name"];
+                        assetData.currentPrice = (double)asset.Value["currentPrice"];
+                        assetData.time = (long)asset.Value["time"];
+                        assetData.assetType = (string)asset.Value["assetType"];
+                        PriceData.Data.Add((string)asset.Key, assetData);
+                    }
+                }
+
+
                 LoadPriceDataErrorMessage = "";
             }
-            catch (HttpRequestException e)
+            catch (HttpRequestException exc)
             {
                 //READ ERRORS: THANKS CHATGPT
                 using (var streamReader = new StreamReader(await response.Content.ReadAsStreamAsync()))
@@ -210,17 +269,54 @@ else
                     string responseContent = await streamReader.ReadToEndAsync();
                     Console.WriteLine(responseContent);
                 }
-                Console.WriteLine("message :{0} ", e.Message);
+                Console.WriteLine("message :{0} ", exc.Message);
                 LoadPriceDataErrorMessage = "An error occrred. Unable to load price data.";
 
             }
         }
-        StateHasChanged();
-        return;
+        //PollingToggleParam = !PollingToggleParam;
+        //ComponentBase.StateHasChanged();
+        //StateHasChanged();
+        //});
+    }
 
 
+
+
+    //protected override async Task OnInitializedAsync()
+    //protected override async Task OnParametersSetAsync()
+    //{
+    //    Console.WriteLine("onparamasync");
+    //    //StartPolling();
+    //    //poller = new Timer(StartPolling, null, 50, 1000);
+    //    //poller = new Timer(1000); // poll for data every second
+    //    //poller.Elapsed += await getData(poller);
+    //    //poller.AutoReset = true;
+    //    //poller.Enabled = true;
+    //    await getData();
+    //}
+
+    protected override async Task OnInitializedAsync()
+    {
+        //poller = new System.Threading.Timer(getData, null, 50, 1000);
+        //OnParameters
+        await getData();
+    }
+
+    //protected override void OnInitialized()
+    //{
+    //    base.OnInitialized();
+
+    //    poller = new System.Threading.Timer(getData, null, 50, 1000);
+    //}
+
+    public void Dispose()
+    {
+        poller.Dispose();
     }
 
 }
 
 @*CURRENT: get data displayed adn do polling, then do transactions*@
+@*CURRENT: trying onParametersSetAsync() to change param and force reload (credit chat for the leading to idea of changing a param to force reload and tehrefore re-fetch data*@
+@*if cascading doesn't work, try normal param and make sure it's in OnParametersSetAsync()'*@

@@ -2,54 +2,111 @@
 @*@layout PrimaryLayout*@
 @using client.Data
 @using System
+@using Newtonsoft.Json.Linq
+@using System.Net.Http.Headers
+@inject HttpClient Http
+
 
 <MudText Typo="Typo.h2" Align="Align.Center">Dashboard</MudText>
 
 @if (!UserState.is_logged_in)
 {
     <NotAuthenticatedCard />
-} else
+}
+else
 {
-    <div style="width: 100%; display: flex; justify-content: center; flex-wrap: wrap; center; gap: 10%;">
-        @*This div block adapted from https://mudblazor.com/components/linechart#basic-usage*@
-        <div>
+    if (LoadPriceDataErrorMessage != "")
+    {
+        <MudContainer MaxWidth="MaxWidth.Large" style="margin-top: 70px;">
+            <MudCard xs="10" sm="6" Elevation="0">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Color="Color.Error" xs="10" sm="6" style="text-align: center;" @bind-value="LoadPriceDataErrorMessage">@LoadPriceDataErrorMessage</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+            </MudCard>
+        </MudContainer>
+    }
+
+<div style="width: 100%; display: flex; justify-content: center; flex-wrap: wrap; center; gap: 10%;">
+    @*This div block adapted from https://mudblazor.com/components/linechart#basic-usage*@
+    @*<div>
             <MudChart ChartType="ChartType.Line" ChartSeries="@Series" XAxisLabels="@XAxisLabels" Width="450px" Height="450px"></MudChart>
-        </div>
+        </div>*@
+    @if (portfolioValueReady)
+    {
+        <PortfolioValueChart />
+    }
 
 
-        @*This div block adapted from https://mudblazor.com/components/piechart#basic-pie*@
-        @*<MudPaper Class="pa-4">*@
-        <div Class="pa-4">
-            <MudChart ChartType="ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" />
-        </div>
-        @*</MudPaper>*@
 
-        @*Breakdown*@
+    @*<MudChart ChartType="ChartType.Line" ChartSeries="@_series" XAxisLabels="@_xAxisLabels" ChartOptions="@_options" Width="100%" Height="350px"></MudChart>
 
-        @*Transactions*@
-        @*This MudDataGrid adapted from https://mudblazor.com/components/datagrid#default-data-grid*@
-        <MudDataGrid Items="@Elements.Take(4)" Class="mt-12">
-            <Columns>
-                <PropertyColumn Property="x => x.Asset.Name" Title="Asset" />
-                <PropertyColumn Property="x => x.Asset.AssetType" Title="Type" />
-                <PropertyColumn Property="x => x.Asset.Symbol" Title="Symbol" />
-                <PropertyColumn Property="x => x.Units" Title="Units" />
-                <PropertyColumn Property="x => x.Ppu" Title="Price/Unit" />
-                <PropertyColumn Property="x => x.IsBuy" Title="Type" /> @*Buy/Sell*@
-                <PropertyColumn Property="x => x.CreatedAt" Title="Created At" />
-            </Columns>
-        </MudDataGrid>
+    @code {
+        private readonly List<ChartSeries> _series = new();
+        private readonly ChartOptions _options = new();
+        private readonly string[] _xAxisLabels = { "1986-04-20", "1986-04-21", "1986-04-22", "1986-04-23", "1986-04-24", "1986-04-25", "1986-04-26" };
+
+        protected override void OnInitialized()
+        {
+            double[] data1 = { 65, 68, 70, 74, 74, 72, 74 };
+            double[] data2 = { 88, 90, 91, 92, 91, 90, 90 };
+            double[] data3 = { 89, 91, 92, 92, 92, 92, 91 };
+            double[] data4 = { 85, 86, 90, 90, 92, 99, 0 };
+
+            _series.Add(new ChartSeries { Name = "Chernobyl-1", Data = data1 });
+            _series.Add(new ChartSeries { Name = "Chernobyl-2", Data = data2 });
+            _series.Add(new ChartSeries { Name = "Chernobyl-3", Data = data3 });
+            _series.Add(new ChartSeries { Name = "Chernobyl-4", Data = data4 });
+
+            _options.YAxisTicks = 400;
+
+            StateHasChanged();
+        }
+    }*@
+
+
+
+
+
+    @*This div block adapted from https://mudblazor.com/components/piechart#basic-pie*@
+    @*<MudPaper Class="pa-4">*@
+    <div Class="pa-4">
+        <MudChart ChartType="ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" />
     </div>
+    @*</MudPaper>*@
+
+    @*Breakdown*@
+
+    @*Transactions*@
+    @*This MudDataGrid adapted from https://mudblazor.com/components/datagrid#default-data-grid*@
+    <MudDataGrid Items="@Elements.Take(4)" Class="mt-12">
+        <Columns>
+            <PropertyColumn Property="x => x.Asset.Name" Title="Asset" />
+            <PropertyColumn Property="x => x.Asset.AssetType" Title="Type" />
+            <PropertyColumn Property="x => x.Asset.Symbol" Title="Symbol" />
+            <PropertyColumn Property="x => x.Units" Title="Units" />
+            <PropertyColumn Property="x => x.Ppu" Title="Price/Unit" />
+            <PropertyColumn Property="x => x.IsBuy" Title="Type" /> @*Buy/Sell*@
+            <PropertyColumn Property="x => x.CreatedAt" Title="Created At" />
+        </Columns>
+    </MudDataGrid>
+</div>
 }
 
 @code {
+    private string LoadPriceDataErrorMessage = "";
+    private bool portfolioValueReady = false;
+    //private double[] ChartData = new double[] {0};
+    //private double[] ChartData = new double[] { 90, 79, 72, 69, 62, 62, 55, 65, 70 };
+    //private List<double> ChartData = new List<double>();
     // Portfolio value chart
     // This code block adapted from https://mudblazor.com/components/linechart#basic-usage
-    public List<ChartSeries> Series = new List<ChartSeries>()
-{
-        new ChartSeries() { Name = "Portfolio Value", Data = new double[] { 90, 79, 72, 69, 62, 62, 55, 65, 70 } },
-    };
-    public string[] XAxisLabels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep" };
+    //public List<ChartSeries> Series = new List<ChartSeries>()
+    //{
+    //        new ChartSeries() { Name = "Portfolio Value", Data = new double[] { 0 } },
+    //    };
+    //public string[] XAxisLabels = { "" };
 
     // Pie chart for asset distribution
     // This code block adapted from https://mudblazor.com/components/piechart#basic-pie
@@ -64,14 +121,73 @@
     // This code block adapted from https://mudblazor.com/components/datagrid#default-data-grid
     private IEnumerable<Transaction> Elements = new List<Transaction>();
 
-    protected override async Task OnInitializedAsync()
+
+    private async Task getData()
     {
-        //Elements = await httpClient.GetFromJsonAsync<List<Element>>("webapi/periodictable");
-        // sample data - DELETE ME
-        //Elements =
-        //Asset s = new Asset(2, "Microsoft Corp.", "MSFT", 4);
-        Console.WriteLine("test");
+        if (UserState.is_logged_in)
+        {
+            // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
+            // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
+            var requestMessage = new HttpRequestMessage()
+            {
+                Method = new HttpMethod("GET"),
+                RequestUri = new Uri(Http.BaseAddress.ToString() + $"portfolio-value/user/{UserState.id}")
+            };
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue(UserState.apiKey);
+            var response = await Http.SendAsync(requestMessage);
+            try
+            {
+                response.EnsureSuccessStatusCode(); // exception if not success code
+                string responseInfoString = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"response: {responseInfoString}");
+                var responseInfo = JArray.Parse(responseInfoString);
+
+                if (ChartDataList.Data.Count > 0) // reset data stored in state if already exists to prevent duplicate stacking on page refresh
+                {
+                    ChartDataList.Data = new List<double>();
+                }
+                foreach (var portValue in responseInfo)
+                {
+                    ChartDataList.Data.Add((double)portValue["value"]);
+                }
+
+                if (ChartDataList.Labels.Count > 0)
+                {
+                    ChartDataList.Labels = new List<string>();
+                }
+                if (responseInfo.Count == 0) // handle no portfolio values
+                {
+                    ChartDataList.Labels.Add(DateTime.Now.ToString());
+                } else
+                {
+                    ChartDataList.Labels.Add((string)responseInfo[0]["created_at"]);
+                }
+
+                LoadPriceDataErrorMessage = "";
+                portfolioValueReady = true;
+            }
+            catch (HttpRequestException exc)
+            {
+                //READ ERRORS: THANKS CHATGPT
+                using (var streamReader = new StreamReader(await response.Content.ReadAsStreamAsync()))
+                {
+                    string responseContent = await streamReader.ReadToEndAsync();
+                    Console.WriteLine(responseContent);
+                }
+                Console.WriteLine("message :{0} ", exc.Message);
+                LoadPriceDataErrorMessage = "An error occrred. Unable to load price data.";
+
+            }
+            StateHasChanged();
+        }
+
     }
 
-}
+    protected override async Task OnInitializedAsync()
+    {
+        await getData();
+    }
 
+    }
+
+@*handle no portfolio value data or pie chart data or other chart data*@

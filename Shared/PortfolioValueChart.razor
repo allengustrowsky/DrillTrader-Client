@@ -1,0 +1,26 @@
+﻿@using Newtonsoft.Json.Linq
+@using client.Data
+@*This div block adapted from https://mudblazor.com/components/linechart#basic-usage*@
+<div>
+    <MudChart ChartType="ChartType.Line" ChartSeries="@Series" ChartOptions="@options" XAxisLabels="@XAxisLabels" Width="450px" Height="450px"></MudChart>
+</div>
+
+@code {
+    //[Parameter] public double[] ChartData { get; set; } = new double[] { 0 };
+    //[Parameter] public double[] ChartData { get; set; }
+    //[Parameter] public string msg { get; set; } = "def";
+
+    public List<ChartSeries> Series = new List<ChartSeries>()
+{
+        new ChartSeries() { Name = "Portfolio Value", Data = ChartDataList.Data.ToArray() },
+    };
+    private ChartOptions options = new();
+    public string[] XAxisLabels = ChartDataList.Labels.ToArray();
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        //options.YAxisTicks = 20000;
+    }
+
+}
+
