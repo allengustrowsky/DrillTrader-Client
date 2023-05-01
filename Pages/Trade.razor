@@ -200,7 +200,7 @@ else
         {
             IntroTitle = "Sell ";
         }
-        DialogService.Show<TransactDialog>(IntroTitle + DialogTitle, parameters, options);
+        DialogService.Show<TransactDialog>(IntroTitle + Symbol, parameters, options);
     }
 
     private void OpenCashDialog(bool IsDeposit, string DialogTitle, AssetPriceData AssetData, string Symbol)
