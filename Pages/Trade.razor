@@ -17,13 +17,13 @@
 }
 else
 {
-    if (LoadPriceDataErrorMessage != "")
+    if (LoadDataErrorMessage != "")
     {
         <MudContainer MaxWidth="MaxWidth.Large" style="margin-top: 70px;">
             <MudCard xs="10" sm="6" Elevation="0">
                 <MudCardHeader>
                     <CardHeaderContent>
-                        <MudText Typo="Typo.h6" Color="Color.Error" xs="10" sm="6" style="text-align: center;" @bind-value="LoadPriceDataErrorMessage">@LoadPriceDataErrorMessage</MudText>
+                        <MudText Typo="Typo.h6" Color="Color.Error" xs="10" sm="6" style="text-align: center;" @bind-value="LoadDataErrorMessage">@LoadDataErrorMessage</MudText>
                     </CardHeaderContent>
                 </MudCardHeader>
             </MudCard>
@@ -176,7 +176,7 @@ else
 
 @code {
     string message = "hi";
-    string LoadPriceDataErrorMessage = "";
+    string LoadDataErrorMessage = "";
     private System.Threading.Timer poller;
     //[CascadingParameter(Name = "PollingToggleParam")] protected bool PollingToggleParam { get; set; } = true;
 
@@ -211,7 +211,7 @@ else
 
     //private async void getData(Object state)
     //private async Task getData(object state)
-    private async Task getData()
+    public async Task getData()
     {
         //await Task.Run(async () =>
         //{
@@ -259,7 +259,7 @@ else
                 }
 
 
-                LoadPriceDataErrorMessage = "";
+                LoadDataErrorMessage = "";
             }
             catch (HttpRequestException exc)
             {
@@ -270,7 +270,7 @@ else
                     Console.WriteLine(responseContent);
                 }
                 Console.WriteLine("message :{0} ", exc.Message);
-                LoadPriceDataErrorMessage = "An error occrred. Unable to load price data.";
+                LoadDataErrorMessage = "An error occrred. Unable to load price data.";
 
             }
         }

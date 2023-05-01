@@ -1,0 +1,27 @@
+﻿@using client.Data
+
+@*This div block adapted from https://mudblazor.com/components/piechart#basic-pie*@
+<div Class="pa-4">
+    @*<MudChart ChartType="ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" />*@
+    <MudChart ChartType="ChartType.Pie" InputData="@data" InputLabels="@PortfolioAssetTotal.LabelList.ToArray()" Width="300px" Height="300px" />
+</div>
+
+@code {
+    //double[] data = { 77, 25, 20, 5 };
+    double[] data = new double[PortfolioAssetTotal.Data.Count];
+    //string[] labels = { "Cash", "Crypto", "Index Funds", "Stock" };
+
+    protected override void OnInitialized()
+    {
+
+        int idx = 0;
+        base.OnInitialized();
+        foreach (var assetInfo in PortfolioAssetTotal.Data)
+        {
+            data[idx] = assetInfo.Value.value;
+            idx += 1;
+        }
+        StateHasChanged();
+    }
+}
+

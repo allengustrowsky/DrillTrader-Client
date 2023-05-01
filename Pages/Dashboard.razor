@@ -42,39 +42,44 @@ else
 
     @*<MudChart ChartType="ChartType.Line" ChartSeries="@_series" XAxisLabels="@_xAxisLabels" ChartOptions="@_options" Width="100%" Height="350px"></MudChart>
 
-    @code {
-        private readonly List<ChartSeries> _series = new();
-        private readonly ChartOptions _options = new();
-        private readonly string[] _xAxisLabels = { "1986-04-20", "1986-04-21", "1986-04-22", "1986-04-23", "1986-04-24", "1986-04-25", "1986-04-26" };
+        @code {
+            private readonly List<ChartSeries> _series = new();
+            private readonly ChartOptions _options = new();
+            private readonly string[] _xAxisLabels = { "1986-04-20", "1986-04-21", "1986-04-22", "1986-04-23", "1986-04-24", "1986-04-25", "1986-04-26" };
 
-        protected override void OnInitialized()
-        {
-            double[] data1 = { 65, 68, 70, 74, 74, 72, 74 };
-            double[] data2 = { 88, 90, 91, 92, 91, 90, 90 };
-            double[] data3 = { 89, 91, 92, 92, 92, 92, 91 };
-            double[] data4 = { 85, 86, 90, 90, 92, 99, 0 };
+            protected override void OnInitialized()
+            {
+                double[] data1 = { 65, 68, 70, 74, 74, 72, 74 };
+                double[] data2 = { 88, 90, 91, 92, 91, 90, 90 };
+                double[] data3 = { 89, 91, 92, 92, 92, 92, 91 };
+                double[] data4 = { 85, 86, 90, 90, 92, 99, 0 };
 
-            _series.Add(new ChartSeries { Name = "Chernobyl-1", Data = data1 });
-            _series.Add(new ChartSeries { Name = "Chernobyl-2", Data = data2 });
-            _series.Add(new ChartSeries { Name = "Chernobyl-3", Data = data3 });
-            _series.Add(new ChartSeries { Name = "Chernobyl-4", Data = data4 });
+                _series.Add(new ChartSeries { Name = "Chernobyl-1", Data = data1 });
+                _series.Add(new ChartSeries { Name = "Chernobyl-2", Data = data2 });
+                _series.Add(new ChartSeries { Name = "Chernobyl-3", Data = data3 });
+                _series.Add(new ChartSeries { Name = "Chernobyl-4", Data = data4 });
 
-            _options.YAxisTicks = 400;
+                _options.YAxisTicks = 400;
 
-            StateHasChanged();
-        }
-    }*@
-
-
+                StateHasChanged();
+            }
+        }*@
 
 
 
-    @*This div block adapted from https://mudblazor.com/components/piechart#basic-pie*@
-    @*<MudPaper Class="pa-4">*@
-    <div Class="pa-4">
-        <MudChart ChartType="ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" />
-    </div>
-    @*</MudPaper>*@
+
+
+    @if (portfolioAssetReady)
+    {
+        <PieChartAssetType />
+        @*This div block adapted from https://mudblazor.com/components/piechart#basic-pie*@
+        @*<MudPaper Class="pa-4">*@
+        @*<div Class="pa-4">
+            <MudChart ChartType="ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" />
+        </div>*@
+        @*</MudPaper>*@
+    }
+
 
     @*Breakdown*@
 
@@ -97,6 +102,7 @@ else
 @code {
     private string LoadPriceDataErrorMessage = "";
     private bool portfolioValueReady = false;
+    private bool portfolioAssetReady = false;
     //private double[] ChartData = new double[] {0};
     //private double[] ChartData = new double[] { 90, 79, 72, 69, 62, 62, 55, 65, 70 };
     //private List<double> ChartData = new List<double>();
@@ -111,8 +117,8 @@ else
     // Pie chart for asset distribution
     // This code block adapted from https://mudblazor.com/components/piechart#basic-pie
     int dataSize = 4;
-    double[] data = { 77, 25, 20, 5 };
-    string[] labels = { "Cash", "Crypto", "Index Funds", "Stock" };
+    //double[] data = { 77, 25, 20, 5 };
+    //string[] labels = { "Cash", "Crypto", "Index Funds", "Stock" };
 
     // Breakdown of what assets are in each category
 
@@ -126,6 +132,9 @@ else
     {
         if (UserState.is_logged_in)
         {
+            //////////////////////////////////////////////////////////////////////
+            //////////////// get portfolio value data for line chart //////////////
+            /////////////////////////////////////////////////////////////////////////
             // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
             // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
             var requestMessage = new HttpRequestMessage()
@@ -142,7 +151,7 @@ else
                 Console.WriteLine($"response: {responseInfoString}");
                 var responseInfo = JArray.Parse(responseInfoString);
 
-                if (ChartDataList.Data.Count > 0) // reset data stored in state if already exists to prevent duplicate stacking on page refresh
+                if (ChartDataList.Data.Count > 0) // reset line chart data stored in state if already exists to prevent duplicate stacking on page refresh
                 {
                     ChartDataList.Data = new List<double>();
                 }
@@ -178,13 +187,161 @@ else
                 LoadPriceDataErrorMessage = "An error occrred. Unable to load price data.";
 
             }
+
+            //////////////////////////////////////////////////////////////////////
+            ////////////// get asset type data for pie chart //////////////
+            /////////////////////////////////////////////////////////////////////////
+            // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
+            // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
+            if (PortfolioAssetTotal.Data.Count == 0)
+            {
+                var requestMessage2 = new HttpRequestMessage()
+                {
+                    Method = new HttpMethod("GET"),
+                    RequestUri = new Uri(Http.BaseAddress.ToString() + "asset-type")
+                };
+                requestMessage2.Headers.Authorization = new AuthenticationHeaderValue(UserState.apiKey);
+                var response2 = await Http.SendAsync(requestMessage2);
+                try
+                {
+                    response2.EnsureSuccessStatusCode(); // exception if not success code
+                    string responseInfoString = await response2.Content.ReadAsStringAsync();
+                    Console.WriteLine($"response: {responseInfoString}");
+                    var responseInfo = JArray.Parse(responseInfoString);
+
+                    foreach (var assetType in responseInfo)
+                    {
+                        PortfolioAssetTotalDatum temp = new PortfolioAssetTotalDatum();
+                        temp.name = (string)assetType["name"];
+                        temp.value = 0;
+                        PortfolioAssetTotal.Data.Add((int)assetType["id"], temp);
+                        PortfolioAssetTotal.LabelList.Add((string)assetType["name"]);
+                    }
+                    portfolioAssetReady = true;
+                }
+                catch (HttpRequestException exc)
+                {
+                    //READ ERRORS: THANKS CHATGPT
+                    using (var streamReader = new StreamReader(await response2.Content.ReadAsStreamAsync()))
+                    {
+                        string responseContent = await streamReader.ReadToEndAsync();
+                        Console.WriteLine(responseContent);
+                    }
+                    Console.WriteLine("message :{0} ", exc.Message);
+                    LoadPriceDataErrorMessage = "An error occrred. Unable to load price data.";
+
+                }
+            }
+
+            //////////////////////////////////////////////////////////////////////
+            ///////////////// get portfolio asset data for pie chart //////////////
+            /////////////////////////////////////////////////////////////////////////
+            // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
+            // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
+            var requestMessage3 = new HttpRequestMessage()
+            {
+                Method = new HttpMethod("GET"),
+                RequestUri = new Uri(Http.BaseAddress.ToString() + $"portfolio-asset/user/{UserState.id}")
+            };
+            requestMessage3.Headers.Authorization = new AuthenticationHeaderValue(UserState.apiKey);
+            var response3 = await Http.SendAsync(requestMessage3);
+            try
+            {
+                response3.EnsureSuccessStatusCode(); // exception if not success code
+                string responseInfoString = await response3.Content.ReadAsStringAsync();
+                Console.WriteLine($"response: {responseInfoString}");
+                var responseInfo = JArray.Parse(responseInfoString);
+                // reset portValue counts
+                foreach (var assetValue in PortfolioAssetTotal.Data)
+                {
+                    assetValue.Value.value = 0;
+                }
+                foreach (var portValue in responseInfo)
+                {
+                    // calculate value for each asset type
+                    PortfolioAssetTotal.Data[(int)portValue["asset"]["asset_type"]].value += (double)portValue["units"] * PriceData.Data[(string)portValue["asset"]["ticker_symbol"]].currentPrice;
+                }
+                portfolioAssetReady = true;
+            }
+            catch (HttpRequestException exc)
+            {
+                //READ ERRORS: THANKS CHATGPT
+                using (var streamReader = new StreamReader(await response3.Content.ReadAsStreamAsync()))
+                {
+                    string responseContent = await streamReader.ReadToEndAsync();
+                    Console.WriteLine(responseContent);
+                }
+                Console.WriteLine("message :{0} ", exc.Message);
+                LoadPriceDataErrorMessage = "An error occrred. Unable to load price data.";
+
+            }
             StateHasChanged();
         }
 
     }
 
+    public async Task getPriceData() // this has to run because the data may not be initialized yet
+    {
+        if (UserState.is_logged_in)
+        {
+            // get price data
+            // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
+            // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
+            var requestMessage = new HttpRequestMessage()
+            {
+                Method = new HttpMethod("GET"),
+                RequestUri = new Uri(Http.BaseAddress.ToString() + "price-data")
+            };
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue(UserState.apiKey);
+            var response = await Http.SendAsync(requestMessage);
+            try
+            {
+                response.EnsureSuccessStatusCode(); // exception if not success code
+                string responseInfoString = await response.Content.ReadAsStringAsync();
+                var responseInfo = JObject.Parse(responseInfoString);
+                // store price data in state
+                if (PriceData.Data.Count > 0) // avoid overwriting price data that's already in state
+                {
+                    Console.WriteLine("state already initialized, modifying");
+                    foreach (var asset in responseInfo)
+                    {
+                        //Console.WriteLine($"before: {asset.Key} ${PriceData.Data[asset.Key].currentPrice}");
+                        PriceData.Data[asset.Key].currentPrice = (double)asset.Value["currentPrice"];
+                        //Console.WriteLine($"after: {asset.Key} ${PriceData.Data[asset.Key].currentPrice}");
+                    }
+                }
+                else // price state is empty, so initialize it
+                {
+                    Console.WriteLine("initializing state...");
+                    foreach (var asset in responseInfo)
+                    {
+                        AssetPriceData assetData = new AssetPriceData();
+                        assetData.name = (string)asset.Value["name"];
+                        assetData.currentPrice = (double)asset.Value["currentPrice"];
+                        assetData.time = (long)asset.Value["time"];
+                        assetData.assetType = (string)asset.Value["assetType"];
+                        PriceData.Data.Add((string)asset.Key, assetData);
+                    }
+                }
+                //LoadDataErrorMessage = "";
+            }
+            catch (HttpRequestException exc)
+            {
+                //READ ERRORS: THANKS CHATGPT
+                using (var streamReader = new StreamReader(await response.Content.ReadAsStreamAsync()))
+                {
+                    string responseContent = await streamReader.ReadToEndAsync();
+                    Console.WriteLine(responseContent);
+                }
+                Console.WriteLine("message :{0} ", exc.Message);
+                //LoadDataErrorMessage = "An error occrred. Unable to load price data.";
+            }
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        await getPriceData();
         await getData();
     }
 
