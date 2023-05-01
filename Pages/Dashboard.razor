@@ -29,6 +29,19 @@ else
     }
 
 <div style="width: 100%; display: flex; justify-content: center; flex-wrap: wrap; center; gap: 10%;">
+    @if (portfolioAssetReady)
+    {
+        <PieChartAssetType />
+        @*This div block adapted from https://mudblazor.com/components/piechart#basic-pie*@
+        @*<MudPaper Class="pa-4">*@
+        @*<div Class="pa-4">
+                <MudChart ChartType="ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" />
+            </div>*@
+        @*</MudPaper>*@
+    }
+
+
+
     @*This div block adapted from https://mudblazor.com/components/linechart#basic-usage*@
     @*<div>
             <MudChart ChartType="ChartType.Line" ChartSeries="@Series" XAxisLabels="@XAxisLabels" Width="450px" Height="450px"></MudChart>
@@ -66,21 +79,6 @@ else
         }*@
 
 
-
-
-
-    @if (portfolioAssetReady)
-    {
-        <PieChartAssetType />
-        @*This div block adapted from https://mudblazor.com/components/piechart#basic-pie*@
-        @*<MudPaper Class="pa-4">*@
-        @*<div Class="pa-4">
-                <MudChart ChartType="ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px" />
-            </div>*@
-        @*</MudPaper>*@
-    }
-
-
     @*Breakdown*@
 
     @*Transactions*@
@@ -98,9 +96,9 @@ else
                 <PropertyColumn Property="x => x.Ppu" Title="Price/Unit" />
                 <PropertyColumn Property="x => x.IsBuy" Title="Type" />--> @*Buy/Sell*@
                 <!--<PropertyColumn Property="x => x.CreatedAt" Title="Created At" />
-            </Columns>
-        </MudDataGrid>-->
-    }
+                    </Columns>
+                </MudDataGrid>-->
+            }
 
 </div>
 }
