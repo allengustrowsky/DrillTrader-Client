@@ -50,12 +50,13 @@ else
                             </MudCardHeader>
 
                             @*<MudCardContent>
-                                    <MudText Typo="Typo.h4" Color="Color.Primary">$@assetItem.Value.currentPrice</MudText>
-                                </MudCardContent>*@
+                                <MudText Typo="Typo.body1" Color="Color.Primary">Your cash:</MudText>
+                                <MudText Typo="Typo.body1" Color="Color.Primary" @bind-value="@userCashAvailable">$@userCashAvailable</MudText>
+                            </MudCardContent>*@
                             <MudCardActions>
-                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenCashDialog(false, "Withdraw"))">Withdraw</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenCashDialog(false, "Withdraw", @assetItem.Value, @assetItem.Key))">Withdraw</MudButton>
                                 <MudSpacer />
-                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenCashDialog(true, "Deposit"))">Deposit</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenCashDialog(true, "Deposit", @assetItem.Value, @assetItem.Key))">Deposit</MudButton>
                             </MudCardActions>
                         </MudCard>
                     </MudPaper>
@@ -89,9 +90,9 @@ else
                                 <MudText Typo="Typo.body2">@assetItem.Value.name</MudText>
                             </MudCardContent>
                             <MudCardActions>
-                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message, @assetItem.Value, @assetItem.Key, @assetItem.Value.currentPrice))">Buy</MudButton>
                                 <MudSpacer />
-                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message, @assetItem.Value, @assetItem.Key, @assetItem.Value.currentPrice))">Sell</MudButton>
                             </MudCardActions>
                         </MudCard>
                     </MudPaper>
@@ -125,9 +126,9 @@ else
                                 <MudText Typo="Typo.body2">@assetItem.Value.name</MudText>
                             </MudCardContent>
                             <MudCardActions>
-                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message, @assetItem.Value, @assetItem.Key, @assetItem.Value.currentPrice))">Buy</MudButton>
                                 <MudSpacer />
-                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message, @assetItem.Value, @assetItem.Key, @assetItem.Value.currentPrice))">Sell</MudButton>
                             </MudCardActions>
                         </MudCard>
                     </MudPaper>
@@ -162,9 +163,9 @@ else
                                 <MudText Typo="Typo.body2">@assetItem.Value.name</MudText>
                             </MudCardContent>
                             <MudCardActions>
-                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message))">Buy</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(true, message, @assetItem.Value, @assetItem.Key, @assetItem.Value.currentPrice))">Buy</MudButton>
                                 <MudSpacer />
-                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message))">Sell</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => OpenTransactDialog(false, message, @assetItem.Value, @assetItem.Key, @assetItem.Value.currentPrice))">Sell</MudButton>
                             </MudCardActions>
                         </MudCard>
                     </MudPaper>
@@ -178,23 +179,37 @@ else
     string message = "hi";
     string LoadDataErrorMessage = "";
     private System.Threading.Timer poller;
+    private double userCashAvailable = 0;
     //[CascadingParameter(Name = "PollingToggleParam")] protected bool PollingToggleParam { get; set; } = true;
 
     @*Adapted from https://mudblazor.com/components/dialog#usage *@
-    private void OpenTransactDialog(bool IsBuy, string DialogTitle)
+    private void OpenTransactDialog(bool IsBuy, string DialogTitle, AssetPriceData AssetData, string Symbol, double CurrentPrice)
     {
         var options = new DialogOptions { CloseOnEscapeKey = true };
         var parameters = new DialogParameters();
         parameters.Add("IsBuy", IsBuy);
+        parameters.Add("AssetData", AssetData);
+        parameters.Add("Symbol", Symbol);
+        parameters.Add("CurrentPrice", CurrentPrice);
 
-        DialogService.Show<TransactDialog>("Sell " + DialogTitle, parameters, options);
+        string IntroTitle;
+        if (IsBuy)
+        {
+            IntroTitle = "Buy ";
+        } else
+        {
+            IntroTitle = "Sell ";
+        }
+        DialogService.Show<TransactDialog>(IntroTitle + DialogTitle, parameters, options);
     }
 
-    private void OpenCashDialog(bool IsDeposit, string DialogTitle)
+    private void OpenCashDialog(bool IsDeposit, string DialogTitle, AssetPriceData AssetData, string Symbol)
     {
         var options = new DialogOptions { CloseOnEscapeKey = true };
         var parameters = new DialogParameters();
         parameters.Add("IsDeposit", IsDeposit);
+        parameters.Add("AssetData", AssetData);
+        parameters.Add("Symbol", Symbol);
         //parameters.Add()
 
         DialogService.Show<CashDialog>(DialogTitle + " Cash", parameters, options);
@@ -300,6 +315,39 @@ else
     {
         //poller = new System.Threading.Timer(getData, null, 50, 1000);
         //OnParameters
+
+        //////////////////////////////////////////////////////////////////////
+        //////////////// Get user cash amount available //////////////////////
+        //////////////////////////////////////////////////////////////////////
+        // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
+        // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
+        var requestMessage2 = new HttpRequestMessage()
+        {
+            Method = new HttpMethod("GET"),
+            RequestUri = new Uri(Http.BaseAddress.ToString() + $"portfolio-asset/symbol/{UserState.portfolio}/$")
+        };
+        requestMessage2.Headers.Authorization = new AuthenticationHeaderValue(UserState.apiKey);
+        var response2 = await Http.SendAsync(requestMessage2);
+        try
+        {
+            response2.EnsureSuccessStatusCode(); // exception if not success code
+            string responseInfoString = await response2.Content.ReadAsStringAsync();
+            Console.WriteLine($"response: {responseInfoString}");
+            var responseInfo = JObject.Parse(responseInfoString);
+            userCashAvailable = (double)responseInfo["units"];
+            //AssetId = (int)responseInfo["asset"]["id"];
+        }
+        catch (HttpRequestException exc)
+        {
+            //READ ERRORS: THANKS CHATGPT
+            using (var streamReader = new StreamReader(await response2.Content.ReadAsStreamAsync()))
+            {
+                string responseContent = await streamReader.ReadToEndAsync();
+                Console.WriteLine(responseContent);
+            }
+            Console.WriteLine("message :{0} ", exc.Message);
+
+        }
         await getData();
     }
 
@@ -316,7 +364,3 @@ else
     }
 
 }
-
-@*CURRENT: get data displayed adn do polling, then do transactions*@
-@*CURRENT: trying onParametersSetAsync() to change param and force reload (credit chat for the leading to idea of changing a param to force reload and tehrefore re-fetch data*@
-@*if cascading doesn't work, try normal param and make sure it's in OnParametersSetAsync()'*@

@@ -1,28 +1,150 @@
-﻿@inject IDialogService DialogService
+﻿@using Newtonsoft.Json.Linq
+@using client.Data
+@inject IDialogService DialogService
+@using System.Net.Http.Headers
+@inject HttpClient Http
 
 @*Component adapted from https://mudblazor.com/components/dialog#usage *@
 <MudDialog>
     <DialogContent>
-        <MudText Typo="Typo.body2">Cash available: $[cashavailable]</MudText>
-        <MudText Typo="Typo.body2">Amount: $[unitsavailable]</MudText>
+        <MudText Typo="Typo.body2">Cash available: $@cashAvailable</MudText>
+        @*<MudText Typo="Typo.body2">Amount: $[unitsavailable]</MudText>*@
         @*Numeric input adapted from https://mudblazor.com/components/numericfield#basic-numeric-fields*@
         <MudNumericField @bind-Value="Units" Label="Units" Format="N2" Variant="Variant.Outlined" Step=".2M" />
+        <MudText Typo="Typo.body2" bind-value="@ErrorText" Color="Color.Error">@ErrorText</MudText>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Confirm</MudButton>
+        @*<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Confirm</MudButton>*@
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitTransaction">Confirm</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
     public decimal Units { get; set; } = 0;
+    private double cashAvailable = 0;
+    private int AssetId;
+    private string ErrorText;
 
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
     [Parameter] public bool IsDeposit { get; set; }
+    [Parameter] public AssetPriceData AssetData { get; set; }
+    [Parameter] public string Symbol { get; set; }
     // [Parameter] public Asset
 
-    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    //void Submit() => MudDialog.Close(DialogResult.Ok(true));
     void Cancel() => MudDialog.Cancel();
-}
 
+    protected async Task SubmitTransaction()
+    {
+        //////////////////////////////////////////////////////////////////////
+        //////////////// Submit transaction to server ////////////////////////
+        //////////////////////////////////////////////////////////////////////
+        // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
+        // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
+        TransactionRequest trans = new TransactionRequest();
+        trans.portfolio_id = UserState.portfolio;
+        trans.asset_id = AssetId;
+        trans.units = (double)Units;
+        trans.is_buy = !IsDeposit;
+        var requestMessage = new HttpRequestMessage()
+        {
+            Method = new HttpMethod("POST"),
+            RequestUri = new Uri(Http.BaseAddress.ToString() + $"transaction"),
+            Content = JsonContent.Create(trans)
+        };
+        requestMessage.Headers.Authorization = new AuthenticationHeaderValue(UserState.apiKey);
+        var response = await Http.SendAsync(requestMessage);
+        try
+        {
+            response.EnsureSuccessStatusCode(); // exception if not success code
+            string responseInfoString = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"response: {responseInfoString}");
+            var responseInfo = JObject.Parse(responseInfoString);
+            cashAvailable = (double)responseInfo["units"];
+            ErrorText = "";
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (HttpRequestException exc)
+        {
+            //READ ERRORS: THANKS CHATGPT
+            using (var streamReader = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            {
+                string responseContent = await streamReader.ReadToEndAsync();
+                Console.WriteLine(responseContent);
+            }
+            Console.WriteLine("message :{0} ", exc.Message);
+            ErrorText = "Something went wrong. Please try again.";
+        }
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        //////////////////////////////////////////////////////////////////////
+        //////////////// Get Asset ID ////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////
+        // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
+        // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
+        var requestMessage = new HttpRequestMessage()
+        {
+            Method = new HttpMethod("GET"),
+            RequestUri = new Uri(Http.BaseAddress.ToString() + $"asset/symbol/{Symbol}")
+        };
+        requestMessage.Headers.Authorization = new AuthenticationHeaderValue(UserState.apiKey);
+        var response = await Http.SendAsync(requestMessage);
+        try
+        {
+            response.EnsureSuccessStatusCode(); // exception if not success code
+            string responseInfoString = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"response: {responseInfoString}");
+            var responseInfo = JObject.Parse(responseInfoString);
+            AssetId = (int)responseInfo["id"];
+        }
+        catch (HttpRequestException exc)
+        {
+            //READ ERRORS: THANKS CHATGPT
+            using (var streamReader = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            {
+                string responseContent = await streamReader.ReadToEndAsync();
+                Console.WriteLine(responseContent);
+            }
+            Console.WriteLine("message :{0} ", exc.Message);
+        }
+
+
+        //////////////////////////////////////////////////////////////////////
+        //////////////// Get user cash amount available //////////////////////
+        //////////////////////////////////////////////////////////////////////
+        // try/catch adapted from https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-7.0
+        // adapted from https://learn.microsoft.com/en-us/aspnet/core/blazor/call-web-api?pivots=webassembly&view=aspnetcore-7.0
+        var requestMessage2 = new HttpRequestMessage()
+        {
+            Method = new HttpMethod("GET"),
+            RequestUri = new Uri(Http.BaseAddress.ToString() + $"portfolio-asset/symbol/{UserState.portfolio}/{Symbol}")
+        };
+        requestMessage2.Headers.Authorization = new AuthenticationHeaderValue(UserState.apiKey);
+        var response2 = await Http.SendAsync(requestMessage2);
+        try
+        {
+            response2.EnsureSuccessStatusCode(); // exception if not success code
+            string responseInfoString = await response2.Content.ReadAsStringAsync();
+            Console.WriteLine($"response: {responseInfoString}");
+            var responseInfo = JObject.Parse(responseInfoString);
+            cashAvailable = (double)responseInfo["units"];
+            //AssetId = (int)responseInfo["asset"]["id"];
+        }
+        catch (HttpRequestException exc)
+        {
+            //READ ERRORS: THANKS CHATGPT
+            using (var streamReader = new StreamReader(await response2.Content.ReadAsStreamAsync()))
+            {
+                string responseContent = await streamReader.ReadToEndAsync();
+                Console.WriteLine(responseContent);
+            }
+            Console.WriteLine("message :{0} ", exc.Message);
+
+        }
+    }
+}
 
