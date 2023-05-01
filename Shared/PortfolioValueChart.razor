@@ -10,8 +10,9 @@
     //[Parameter] public double[] ChartData { get; set; }
     //[Parameter] public string msg { get; set; } = "def";
 
+    // Adapted from mudblazor documentation
     public List<ChartSeries> Series = new List<ChartSeries>()
-{
+    {
         new ChartSeries() { Name = "Portfolio Value", Data = ChartDataList.Data.ToArray() },
     };
     private ChartOptions options = new();
