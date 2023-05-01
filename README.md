@@ -20,7 +20,7 @@ Drill Trader simulates trading on a real-time platform for trading stocks, index
 
 ## Setup
 - Complete the [backend setup](https://github.com/allengustrowsky/DrillTrader-Server)
-- Build and run
+- Build and run (Visual Studio conveniently does most of this automatically if the project is run in a VS editor).
 
 ## Configuration
 - Backend runs on port 3000 by default, frontend runs on port 5258.  If you decide to modify the backend port, change the `BaseAddress` Uri where the `HttpClient` services is added. 
