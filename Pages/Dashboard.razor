@@ -28,6 +28,22 @@ else
         </MudContainer>
     }
 
+    if (currentPortfolioValue != 0)
+    {
+        <MudContainer MaxWidth="MaxWidth.Large" style="margin-top: 50px;">
+            <MudCard xs="10" sm="6" Elevation="0">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h5" xs="10" sm="6" style="text-align: center;" @bind-value="currentPortfolioValue">
+                            Current portfolio value:
+                            <MudText Typo="Typo.h5" Color="Color.Primary">$@currentPortfolioValue</MudText>
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+            </MudCard>
+        </MudContainer>
+    }
+
 <div style="width: 100%; display: flex; justify-content: center; flex-wrap: wrap; center; gap: 10%;">
     @if (portfolioAssetReady)
     {
@@ -108,6 +124,7 @@ else
     private bool portfolioValueReady = false;
     private bool portfolioAssetReady = false;
     private bool transactionsReady = false;
+    private double currentPortfolioValue = 0;
     //private double[] ChartData = new double[] {0};
     //private double[] ChartData = new double[] { 90, 79, 72, 69, 62, 62, 55, 65, 70 };
     //private List<double> ChartData = new List<double>();
@@ -163,6 +180,11 @@ else
                 foreach (var portValue in responseInfo)
                 {
                     ChartDataList.Data.Add((double)portValue["value"]);
+                }
+                // store current portfolio value
+                if (responseInfo.Count > 0)
+                {
+                    currentPortfolioValue = (double)responseInfo[responseInfo.Count - 1]["value"];
                 }
 
                 if (ChartDataList.Labels.Count > 0)
@@ -312,7 +334,7 @@ else
 
                 foreach (var transaction in responseInfo)
                 {
-                    Console.WriteLine(transaction);
+                    //Console.WriteLine(transaction);
                     TransactionAsset temp = new TransactionAsset();
                     temp.id = (int)transaction["asset"]["id"];
                     temp.name = (string)transaction["asset"]["name"];
@@ -320,14 +342,13 @@ else
                     temp.asset_type = (int)transaction["asset"]["asset_type"];
                     Transaction tempTrans = new Transaction();
                     tempTrans.id = (int)transaction["id"];
-                    tempTrans.units = (double)transaction["id"];
+                    tempTrans.units = (double)transaction["units"];
                     tempTrans.price_per_unit = (double)transaction["price_per_unit"];
                     tempTrans.is_buy = (bool)transaction["is_buy"];
                     tempTrans.created_at = (DateTime)transaction["created_at"];
                     tempTrans.asset = temp;
                     tempTrans.portfolio = (int)transaction["portfolio"];
                     client.Data.RecentTransactions.Data.Add(tempTrans);
-                    Console.WriteLine(transaction);
                 }
 
                 transactionsReady = true;
